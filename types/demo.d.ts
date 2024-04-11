@@ -234,7 +234,7 @@ declare namespace Demo {
         id?: number;
         name?: string;
         country?: ICountryObject;
-        company?: string;
+        location?: string;
         date: Date;
         status?: string;
         activity?: number;
@@ -250,6 +250,14 @@ declare namespace Demo {
             name: string;
             image: string;
         };
+    };
+    type Job = {
+        id?: number;
+        name?: string;
+        location?: string;
+        deadline: Date;
+        description:string;
+        resumecount:string;
     };
 
     // EventService

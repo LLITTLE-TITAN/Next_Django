@@ -9,23 +9,30 @@ import { ProgressBar } from 'primereact/progressbar';
 import React, { useEffect, useRef, useState } from 'react';
 import { CustomerService } from '@/demo/service/CustomerService';
 import type { Demo } from '@/types';
+import { useQuery, gql } from '@apollo/client';
+const GET_DATA = gql`
+  query {
+    jobs {
+      id
+      name
+      location
+      resumecount
+      description
+      deadline
+    }
+}
+`; 
 
 function List() {
-    const [customers, setCustomers] = useState<Demo.Customer[]>([]);
     const [filters, setFilters] = useState<DataTableFilterMeta>({});
-    const [loading, setLoading] = useState(true);
+
     const [globalFilterValue, setGlobalFilterValue] = useState('');
     const router = useRouter();
     const dt = useRef(null);
-
-    const getCustomers = (data: Demo.Customer[]) => {
-        return [...(data || [])].map((d) => {
-            d.date = new Date(d.date);
-            return d;
-        });
-    };
+ 
 
     const formatDate = (value: Date) => {
+        console.log(value)
         return value.toLocaleDateString('en-US', {
             day: '2-digit',
             month: '2-digit',
@@ -56,14 +63,18 @@ function List() {
         });
         setGlobalFilterValue('');
     };
+    const { loading, error, data } = useQuery(GET_DATA);
 
-    useEffect(() => {
-        CustomerService.getCustomersLarge().then((data) => {
-            setCustomers(getCustomers(data));
-            setLoading(false);
-        });
-        initFilters();
-    }, []);
+    if (loading) return <p>Loading...</p>;
+    if (error) return <p>Error: {error.message}</p>;
+    // useEffect(() => {
+    //     if(data)
+    //     //CustomerService.getCustomersLarge().then((data) => {
+    //     setCustomers(data.data.jobs);
+            
+    //     //});
+    //     initFilters();
+    // }, []);
 
     const onGlobalFilterChange = (e: React.ChangeEvent<HTMLInputElement>) => {
         const { value } = e.target;
@@ -85,23 +96,24 @@ function List() {
         );
     };
 
-    const nameBodyTemplate = (customer: Demo.Customer) => {
+    const nameBodyTemplate = (job: Demo.Job) => {
         return (
             <>
                 <span className="p-column-title">Name</span>
-                {customer.name}
+                {job.name}
+            </>
+        );
+    };
+    const countryBodyTemplate = (job: Demo.Job) => {
+        return (
+            <>
+                <span className="p-column-title">Location</span>
+                {job.location}
             </>
         );
     };
 
-    const countryBodyTemplate = (customer: Demo.Customer) => {
-        return (
-            <>
-                <img alt={customer.country.name} src={`/demo/images/flag/flag_placeholder.png`} className={'w-2rem mr-2 flag flag-' + customer.country.code} />
-                <span className="image-text">{customer.country.name}</span>
-            </>
-        );
-    };
+    
 
     const createdByBodyTemplate = (customer: Demo.Customer) => {
         return (
@@ -111,9 +123,30 @@ function List() {
             </div>
         );
     };
-
-    const dateBodyTemplate = (customer: Demo.Customer) => {
-        return formatDate(customer.date);
+    
+    const dateBodyTemplate = (job: Demo.Job) => {
+        return (
+            <>
+                <span className="p-column-title">Deadline</span>
+                {job.deadline}
+            </>
+        );
+    };
+    const descriptionBodyTemplate = (job: Demo.Job) => {
+        return (
+            <>
+                 
+                {job.description}
+            </>
+        );
+    };
+    const resumecountBodyTemplate = (job: Demo.Job) => {
+        return (
+            <>
+                 
+                {job.resumecount}
+            </>
+        );
     };
 
     const activityBodyTemplate = (customer: Demo.Customer) => {
@@ -121,12 +154,12 @@ function List() {
     };
 
     const header = renderHeader();
-
+    console.log(data.jobs)
     return (
         <div className="card">
             <DataTable
                 ref={dt}
-                value={customers}
+                value={data.jobs}
                 header={header}
                 paginator
                 rows={10}
@@ -136,13 +169,13 @@ function List() {
                 filters={filters}
                 loading={loading}
             >
-                <Column field="" header="" sortable  headerClassName="white-space-nowrap" style={{ width: '25%' }}></Column>
-                <Column field="name" header="Assigned to" sortable body={nameBodyTemplate} headerClassName="white-space-nowrap" style={{ width: '25%' }}></Column>
-                <Column field="country.name" header="Job ID-Title" sortable body={countryBodyTemplate} headerClassName="white-space-nowrap" style={{ width: '25%' }}></Column>
-                <Column field="date" header="Location" sortable body={dateBodyTemplate} headerClassName="white-space-nowrap" style={{ width: '25%' }}></Column>
-                <Column field="representative.name" header="Exp.Date" body={createdByBodyTemplate} headerClassName="white-space-nowrap" style={{ width: '25%' }} sortable></Column>
-                <Column field="activity" header="Notes" body={activityBodyTemplate} headerClassName="white-space-nowrap" style={{ width: '25%' }} sortable></Column>
-                <Column field="activity" header="Resumes count"  headerClassName="white-space-nowrap" style={{ width: '25%' }} sortable></Column>
+                 
+                <Column field="name" header="Job ID-Title" sortable body={nameBodyTemplate} headerClassName="white-space-nowrap" style={{ width: '25%' }}></Column>
+                <Column field="location" header="Location" sortable body={countryBodyTemplate} headerClassName="white-space-nowrap" style={{ width: '25%' }}></Column>
+                <Column field="deadline" header="Exp.Date" sortable body={dateBodyTemplate} headerClassName="white-space-nowrap" style={{ width: '25%' }}></Column>
+                
+                <Column field="description" header="Notes" body={descriptionBodyTemplate} headerClassName="white-space-nowrap" style={{ width: '25%' }} ></Column>
+                <Column field="resumecount" header="Resumes count"  body={resumecountBodyTemplate} headerClassName="white-space-nowrap" style={{ width: '25%' }} ></Column> 
             </DataTable>
         </div>
     );
