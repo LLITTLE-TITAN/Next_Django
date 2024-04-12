@@ -11,18 +11,7 @@ import { CustomerService } from '@/demo/service/CustomerService';
 import type { Demo } from '@/types';
 import { useQuery, gql } from '@apollo/client';
 import ReactHtmlParser from 'react-html-parser';
-const GET_DATA = gql`
-  query {
-    jobs {
-      id
-      name
-      location
-      resumecount
-      description
-      deadline
-    }
-}
-`; 
+import { Paginator } from 'primereact/paginator';
 
 function List() {
     const [filters, setFilters] = useState<DataTableFilterMeta>({});
@@ -30,7 +19,29 @@ function List() {
     const [globalFilterValue, setGlobalFilterValue] = useState('');
     const router = useRouter();
     const dt = useRef(null);
- 
+    const [offset,setOffset]=useState(0);
+    const [limit,setLimit]=useState(10);
+    // const [loading,setLoading]=useState(false);
+    // const [data,setData]=useState([]);
+    const GET_DATA = gql`
+    query {
+    jobs(offset:${offset},limit:${limit}) {
+        id
+        name
+        location
+        resumecount
+        description
+        deadline
+    }
+    }
+    `; 
+    const GET_JOB_COUNT=gql`
+    query {
+        pageInfoJobs{
+            totalCount
+        }
+    }
+    `;
 
     const formatDate = (value: Date) => {
         console.log(value)
@@ -64,18 +75,17 @@ function List() {
         });
         setGlobalFilterValue('');
     };
-    const { loading, error, data } = useQuery(GET_DATA);
 
-    if (loading) return <p>Loading...</p>;
-    if (error) return <p>Error: {error.message}</p>;
+    const { loading, error, data:jobsData } = useQuery(GET_DATA);
+    const {loading:countsloading, error:countserror, data:countsData}=useQuery(GET_JOB_COUNT);
+    console.log(countsData,jobsData)
     // useEffect(() => {
-    //     if(data)
-    //     //CustomerService.getCustomersLarge().then((data) => {
-    //     setCustomers(data.data.jobs);
-            
-    //     //});
-    //     initFilters();
-    // }, []);
+       
+    //    setLoading(loading)     
+    //    setData(data.jobs);   
+    // }, [limit,data]);
+
+    if (loading||countsloading) return <p>Loading...</p>; 
 
     const onGlobalFilterChange = (e: React.ChangeEvent<HTMLInputElement>) => {
         const { value } = e.target;
@@ -155,29 +165,34 @@ function List() {
     };
 
     const header = renderHeader();
-    console.log(data.jobs)
+     
+    const onPageChange = (event:any) => {
+        console.log(event)
+        setOffset(event.first)
+        setLimit(event.rows)
+    };
     return (
         <div className="card">
             <DataTable
                 ref={dt}
-                value={data.jobs}
+                value={jobsData.jobs}
                 header={header}
-                paginator
-                rows={10}
-                responsiveLayout="scroll"
-                currentPageReportTemplate="Showing {first} to {last} of {totalRecords} entries"
-                rowsPerPageOptions={[10, 25, 50]}
                 filters={filters}
-                loading={loading}
             >
-                 
                 <Column field="name" header="Job ID-Title" sortable body={nameBodyTemplate} headerClassName="white-space-nowrap" style={{ width: '25%' }}></Column>
                 <Column field="location" header="Location" sortable body={countryBodyTemplate} headerClassName="white-space-nowrap" style={{ width: '25%' }}></Column>
                 <Column field="deadline" header="Exp.Date" sortable body={dateBodyTemplate} headerClassName="white-space-nowrap" style={{ width: '25%' }}></Column>
-                
                 <Column field="description" header="Notes" body={descriptionBodyTemplate} headerClassName="white-space-nowrap" style={{ width: '25%' }} ></Column>
                 <Column field="resumecount" header="Resumes count"  body={resumecountBodyTemplate} headerClassName="white-space-nowrap" style={{ width: '25%' }} ></Column> 
             </DataTable>
+            <Paginator
+                first={offset}
+                rows={limit}
+                totalRecords={countsData.pageInfoJobs.totalCount} // Set totalRecords
+                rowsPerPageOptions={[10, 25, 50]}
+                onPageChange={onPageChange}
+                pageLinkSize={5}
+            />
         </div>
     );
 }
