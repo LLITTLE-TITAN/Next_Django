@@ -10,21 +10,34 @@ import React, { useEffect, useRef, useState } from 'react';
 import { CustomerService } from '@/demo/service/CustomerService';
 import type { Demo } from '@/types';
 
+import { useQuery, gql } from '@apollo/client';
+import ReactHtmlParser from 'react-html-parser';
+import { Paginator } from 'primereact/paginator';
 function List() {
-    const [customers, setCustomers] = useState<Demo.Customer[]>([]);
-    const [filters, setFilters] = useState<DataTableFilterMeta>({});
-    const [loading, setLoading] = useState(true);
+     
+    const [filters, setFilters] = useState<DataTableFilterMeta>({}); 
     const [globalFilterValue, setGlobalFilterValue] = useState('');
     const router = useRouter();
     const dt = useRef(null);
-
-    const getCustomers = (data: Demo.Customer[]) => {
-        return [...(data || [])].map((d) => {
-            d.date = new Date(d.date);
-            return d;
-        });
-    };
-
+    const [offset,setOffset]=useState(0);
+    const [limit,setLimit]=useState(50);
+    const GET_DATA = gql`
+    query {
+    candidates(offset:${offset},limit:${limit}) {
+        id
+        name
+        email
+        phone 
+    }
+    }
+    `; 
+    const GET_Candidate_COUNT=gql`
+    query {
+        pageInfoCandidates{
+            totalCount
+        }
+    }
+    `;
     const formatDate = (value: Date) => {
         return value.toLocaleDateString('en-US', {
             day: '2-digit',
@@ -56,14 +69,10 @@ function List() {
         });
         setGlobalFilterValue('');
     };
+    const { loading, error, data:candidatesData } = useQuery(GET_DATA);
+    const {loading:countsloading, error:countserror, data:countsData}=useQuery(GET_Candidate_COUNT);
+    if (loading||countsloading) return <p>Loading...</p>; 
 
-    useEffect(() => {
-        CustomerService.getCustomersLarge().then((data) => {
-            setCustomers(getCustomers(data));
-            setLoading(false);
-        });
-        initFilters();
-    }, []);
 
     const onGlobalFilterChange = (e: React.ChangeEvent<HTMLInputElement>) => {
         const { value } = e.target;
@@ -121,33 +130,31 @@ function List() {
     };
 
     const header = renderHeader();
-
+    const onPageChange = (event:any) => {
+        console.log(event)
+        setOffset(event.first)
+        setLimit(event.rows)
+    };
     return (
         <div className="card">
             <DataTable
                 ref={dt}
-                value={customers}
+                value={candidatesData.candidates}
                 header={header}
-                paginator
-                rows={10}
-                responsiveLayout="scroll"
-                currentPageReportTemplate="Showing {first} to {last} of {totalRecords} entries"
-                rowsPerPageOptions={[10, 25, 50]}
                 filters={filters}
-                loading={loading}
             >
                 <Column field="" header="" sortable  headerClassName="white-space-nowrap" style={{ width: '25%' }}></Column>
-                <Column field="name" header="ID" sortable body={nameBodyTemplate} headerClassName="white-space-nowrap" style={{ width: '25%' }}></Column>
-                <Column field="country.name" header="Name" sortable body={countryBodyTemplate} headerClassName="white-space-nowrap" style={{ width: '25%' }}></Column>
-                <Column field="date" header="Email" sortable body={dateBodyTemplate} headerClassName="white-space-nowrap" style={{ width: '25%' }}></Column>
-                <Column field="representative.name" header="Phone" body={createdByBodyTemplate} headerClassName="white-space-nowrap" style={{ width: '25%' }} sortable></Column>
-                <Column field="activity" header="Skill" body={activityBodyTemplate} headerClassName="white-space-nowrap" style={{ width: '25%' }} sortable></Column>
-                <Column field="activity" header="Rate"  headerClassName="white-space-nowrap" style={{ width: '25%' }} sortable></Column>
-                <Column field="activity" header="City,State"  headerClassName="white-space-nowrap" style={{ width: '25%' }} sortable></Column>
-                <Column field="activity" header="Visa"  headerClassName="white-space-nowrap" style={{ width: '25%' }} sortable></Column>
-                <Column field="activity" header="Referred by"  headerClassName="white-space-nowrap" style={{ width: '25%' }} sortable></Column>
-                <Column field="activity" header="Date added"  headerClassName="white-space-nowrap" style={{ width: '25%' }} sortable></Column>
+                <Column field="name" header="Name" sortable body={nameBodyTemplate} headerClassName="white-space-nowrap" style={{ width: '25%' }}></Column>
+                 
             </DataTable>
+            <Paginator
+                first={offset}
+                rows={limit}
+                totalRecords={countsData.pageInfoCandidates.totalCount} // Set totalRecords
+                rowsPerPageOptions={[10, 25, 50]}
+                onPageChange={onPageChange}
+                pageLinkSize={5}
+            />
         </div>
     );
 }

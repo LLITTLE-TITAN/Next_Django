@@ -20,7 +20,7 @@ function List() {
     const router = useRouter();
     const dt = useRef(null);
     const [offset,setOffset]=useState(0);
-    const [limit,setLimit]=useState(10);
+    const [limit,setLimit]=useState(50);
     // const [loading,setLoading]=useState(false);
     // const [data,setData]=useState([]);
     const GET_DATA = gql`
