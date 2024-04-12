@@ -10,6 +10,7 @@ import React, { useEffect, useRef, useState } from 'react';
 import { CustomerService } from '@/demo/service/CustomerService';
 import type { Demo } from '@/types';
 import { useQuery, gql } from '@apollo/client';
+import ReactHtmlParser from 'react-html-parser';
 const GET_DATA = gql`
   query {
     jobs {
@@ -136,7 +137,7 @@ function List() {
         return (
             <>
                  
-                {job.description}
+                {ReactHtmlParser(job.description)}
             </>
         );
     };
