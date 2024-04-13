@@ -8,7 +8,8 @@ import { InputTextarea } from 'primereact/inputtextarea';
 import { Dropdown } from 'primereact/dropdown';
 import { useFormState } from 'react-dom';
 import { create_candidate } from '@/app/lib/actions';
-
+import { gql, useMutation } from '@apollo/client';
+import { useRouter } from 'next/navigation';
 interface DropdownItem {
     name: string;
     code: string;
@@ -27,7 +28,16 @@ const FormLayoutDemo = () => {
         ],
         []
     );
-
+    const CREATE_CANDIDATE = gql`
+    mutation CreateCandidate($name: String!,$email: String!,$phone: String!,$rate: String!) {
+        createCandidate(name: $name,email: $email,phone: $phone,rateSalary: $rate) {
+       
+        id
+        name
+     
+        }
+    }
+    `; 
     const onCheckboxChange = (e: CheckboxChangeEvent) => {
         let selectedValue = [...checkboxValue];
         if (e.checked) selectedValue.push(e.value);
@@ -35,16 +45,45 @@ const FormLayoutDemo = () => {
 
         setCheckboxValue(selectedValue);
     };
-
+    const router = useRouter();
     useEffect(() => {
         setDropdownItem(dropdownItems[0]);
     }, [dropdownItems]);
-
-    const initialState = { message: null, errors: {} };
+    
+    const initialState = { message: null, errors: {} }; 
     const [state, dispatch] = useFormState(create_candidate, initialState);
+    const [createCandidate] = useMutation(CREATE_CANDIDATE);
+    const handleSubmit = async (e:any) => {
+        e.preventDefault();
+        try {
+          const formData = new FormData(e.target);
+          const input = Object.fromEntries(formData.entries());
+          console.log(input)
+          const { first_name, 
+            last_name, 
+            email,
+            phone,
+            skill,
+            rate,
+            city,
+            visa,
+            referred } = input;
+        const date = new Date().toISOString().split('T')[0];
+        const name = first_name 
 
+          const { data } = await createCandidate({ variables: { name,phone,email,rate } });
+          router.push('/candidate_list');
+          console.log('Candidate created:', data.createCandidate);
+         
+          // Handle success, reset form, show success message, etc.
+        } catch (error) {
+          console.error('Error creating candidate:', error);
+          // Handle error, show error message, etc.
+        }
+      };
+    
     return (
-        <form action={dispatch}>
+        <form onSubmit={handleSubmit}>
             <div className="grid">
                 <div className="col-12">
                     <div className="card p-fluid font-medium text-base">
