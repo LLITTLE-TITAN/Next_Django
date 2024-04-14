@@ -8,8 +8,9 @@ import { InputTextarea } from "primereact/inputtextarea";
 import { Dropdown } from "primereact/dropdown";
 import { useFormState } from "react-dom";
 import { create_candidate } from "@/app/lib/actions";
-import { gql, useMutation } from "@apollo/client";
+import { gql, useMutation, useQuery } from "@apollo/client";
 import { useRouter } from "next/navigation";
+
 interface DropdownItem {
   name: string;
   code: string;
@@ -34,12 +35,14 @@ const FormLayoutDemo = () => {
       $email: String!
       $phone: String!
       $rate: String!
+      $skillId:Int!
     ) {
       createCandidate(
         name: $name
         email: $email
         phone: $phone
         rateSalary: $rate
+        skillId: $skillId
       ) {
         id
         name
@@ -65,7 +68,7 @@ const FormLayoutDemo = () => {
   useEffect(() => {
     setDropdownItem(dropdownItems[0]);
   }, [dropdownItems]);
-
+  const [skillItem,setSkillItem]=useState<any>();
   const initialState = { message: null, errors: {} };
   const [state, dispatch] = useFormState(create_candidate, initialState);
   const [createCandidate] = useMutation(CREATE_CANDIDATE);
@@ -92,10 +95,9 @@ const FormLayoutDemo = () => {
         referred,
       } = input;
       const date = new Date().toISOString().split("T")[0];
-      const name = first_name;
-
+      const name = first_name; 
       const { data } = await createCandidate({
-        variables: { name, phone, email, rate },
+        variables: { name, phone, email, rate,skillId: Number( skillItem.id) },
       });
       router.push("/candidate_list");
       console.log("Candidate created:", data.createCandidate);
@@ -266,11 +268,11 @@ const FormLayoutDemo = () => {
                   <label htmlFor="skill">* Skill</label>
                   <Dropdown
                     id="skill"
-                    className="text-gray-700"
-                    value={skillsData}
-                    onChange={(e) => setDropdownItem(e.value)}
-                    options={dropdownItems}
-                    optionLabel="skill"
+                    className="text-gray-700"  
+                    options={skillsData.skills}
+                    value={skillItem}
+                    onChange={(e) => setSkillItem(e.value)}
+                    optionLabel="name"
                     placeholder="Select One"
                   ></Dropdown>
                 </div>
