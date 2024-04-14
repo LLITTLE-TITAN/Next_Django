@@ -42,11 +42,10 @@ const EditForm = ({ candidateData, id }: any) => {
   );
 
   const EDIT_CANDIDATE = gql`
-    mutation update_candidate($name: String!,$email: String!,$phone: String!,$rate: String!) {
-        updateCandidate(id:${id},name: $name,email: $email,phone: $phone,rateSalary: $rate) {
+    mutation update_candidate($name: String!,$email: String!,$phone: String!,$rateSalary: String!) {
+        updateCandidate(id:${id},name: $name,email: $email,phone: $phone,rateSalary: $rateSalary) {
        
-        id
-        name
+            __typename
      
         }
     }
@@ -109,11 +108,11 @@ const EditForm = ({ candidateData, id }: any) => {
                   <label htmlFor="name2">* First name</label>
                   <InputText
                     id="name2"
-                    value={candidateData.candidateById.name.split(" ")[0]}
+                    {...register("name")}
                     type="text"
                     placeholder="Legal first name"
                     required
-                    name="first_name"
+                      
                   />
                 </div>
                 <div
