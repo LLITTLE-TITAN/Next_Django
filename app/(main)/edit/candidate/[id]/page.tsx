@@ -55,7 +55,7 @@ const FormLayoutDemo = ({ params }: { params: { id: string } }) => {
       <EditForm
         candidateData={candidateData}
         id={id}
-        skillItem={candidateData.candidateById.skill.id}
+        skillItem={candidateData.candidateById.skill}
         skillsData={skillData.skills}
       />
     </>

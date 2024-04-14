@@ -41,10 +41,10 @@ const EditForm = ({ candidateData, id, skillItem, skillsData }: any) => {
     ],
     []
   );
-  const [selectedskillItem, setSelectedskillItem] = useState<any>();
+  const [selectedskillItem, setSelectedskillItem] = useState<any>(skillItem);
   const EDIT_CANDIDATE = gql`
-    mutation update_candidate($name: String!,$email: String!,$phone: String!,$rateSalary: String!) {
-        updateCandidate(id:${id},name: $name,email: $email,phone: $phone,rateSalary: $rateSalary) {
+    mutation update_candidate($name: String!,$email: String!,$phone: String!,$rateSalary: String!,$skillId:Int!) {
+        updateCandidate(id:${id},name: $name,email: $email,phone: $phone,rateSalary: $rateSalary,skillId:$skillId) {
        
             __typename
      
@@ -75,7 +75,7 @@ const EditForm = ({ candidateData, id, skillItem, skillsData }: any) => {
         last_name,
         email,
         phone,
-        skill,
+        skillId,
         rateSalary,
         city,
         visa,
@@ -85,7 +85,7 @@ const EditForm = ({ candidateData, id, skillItem, skillsData }: any) => {
       const name = first_name;
 
       const { data } = await update_candidate({
-        variables: { name, phone, email, rateSalary },
+        variables: { name, phone, email, rateSalary,skillId: parseInt(selectedskillItem.id) },
       });
       router.push("/candidate_list");
 
@@ -96,8 +96,12 @@ const EditForm = ({ candidateData, id, skillItem, skillsData }: any) => {
     }
   });
   useEffect(() => {
-    reset(candidateData.candidateById); // asynchronously reset your form values
-  }, [reset, candidateData]);
+   
+    reset({
+        ...candidateData.candidateById,
+        skillItem: skillItem,
+      }); // asynchronously reset your form values
+  }, [reset, candidateData,skillItem]);
   return (
     <form onSubmit={onSubmit}>
       <div className="grid">
@@ -255,12 +259,12 @@ const EditForm = ({ candidateData, id, skillItem, skillsData }: any) => {
             <div className="formgrid grid ">
               <div className="flex-col field col">
                 <div className="field col">
-                  <label htmlFor="name2">* Skill</label>
+                  <label htmlFor="skill">* Skill</label>
                   <Dropdown
                     id="skill"
                     className="text-gray-700"
                     options={skillsData}
-                    value={skillItem}
+                    value={selectedskillItem}
                     onChange={(e) => setSelectedskillItem(e.value)}
                     optionLabel="name"
                     placeholder="Select One"
