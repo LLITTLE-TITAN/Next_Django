@@ -19,6 +19,7 @@
     "primereact": "^10.6.3",
     "react": "^18",
     "react-dom": "^18",
+    "react-hook-form": "^7.51.3",
     "react-html-parser": "^2.0.2",
     "zod": "^3.22.4"
   },
