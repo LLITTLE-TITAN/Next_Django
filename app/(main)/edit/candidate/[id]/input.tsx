@@ -16,7 +16,7 @@ interface DropdownItem {
   code: string;
 }
 
-const EditForm = ({ candidateData, id }: any) => {
+const EditForm = ({ candidateData, id, skillItem, skillsData }: any) => {
   const router = useRouter();
   const {
     handleSubmit,
@@ -26,6 +26,7 @@ const EditForm = ({ candidateData, id }: any) => {
   } = useForm({
     defaultValues: {
       ...candidateData.candidateById,
+      skillItem: skillItem,
     },
   });
   const [dropdownItem, setDropdownItem] = useState<DropdownItem | null>(null);
@@ -40,7 +41,7 @@ const EditForm = ({ candidateData, id }: any) => {
     ],
     []
   );
-
+  const [selectedskillItem, setSelectedskillItem] = useState<any>();
   const EDIT_CANDIDATE = gql`
     mutation update_candidate($name: String!,$email: String!,$phone: String!,$rateSalary: String!) {
         updateCandidate(id:${id},name: $name,email: $email,phone: $phone,rateSalary: $rateSalary) {
@@ -112,7 +113,6 @@ const EditForm = ({ candidateData, id }: any) => {
                     type="text"
                     placeholder="Legal first name"
                     required
-                      
                   />
                 </div>
                 <div
@@ -256,7 +256,15 @@ const EditForm = ({ candidateData, id }: any) => {
               <div className="flex-col field col">
                 <div className="field col">
                   <label htmlFor="name2">* Skill</label>
-                  <InputText id="name2" name="skill" type="text" required />
+                  <Dropdown
+                    id="skill"
+                    className="text-gray-700"
+                    options={skillsData}
+                    value={skillItem}
+                    onChange={(e) => setSelectedskillItem(e.value)}
+                    optionLabel="name"
+                    placeholder="Select One"
+                  ></Dropdown>
                 </div>
                 <div
                   className="field col"

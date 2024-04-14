@@ -29,18 +29,35 @@ const FormLayoutDemo = ({ params }: { params: { id: string } }) => {
         phone
         email
         rateSalary
+        skill{
+          id
+          name
+        }
         }
     }
     `;
-
+  const GET_SkillDATA = gql`
+    query {
+      skills(offset: 0, limit: 50) {
+        id
+        name
+      }
+    }
+  `;
   const initialState = { message: null, errors: {} };
 
   const { loading, error, data: candidateData } = useQuery(GET_CANDIDATE);
-  if (loading) return <p>Loading...</p>;
+  const { loading: skillLoading, data: skillData } = useQuery(GET_SkillDATA);
+  if (loading || skillLoading) return <p>Loading...</p>;
 
   return (
     <>
-      <EditForm candidateData={candidateData} id={id} />
+      <EditForm
+        candidateData={candidateData}
+        id={id}
+        skillItem={candidateData.candidateById.skill.id}
+        skillsData={skillData.skills}
+      />
     </>
   );
 };
