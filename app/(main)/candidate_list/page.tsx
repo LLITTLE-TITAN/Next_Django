@@ -8,8 +8,7 @@ import { InputText } from 'primereact/inputtext';
 import { ProgressBar } from 'primereact/progressbar';
 import React, { useEffect, useRef, useState } from 'react';
 import { CustomerService } from '@/demo/service/CustomerService';
-import type { Demo } from '@/types';
-
+import type { Demo } from '@/types'; 
 import { useQuery, gql } from '@apollo/client';
 import ReactHtmlParser from 'react-html-parser';
 import { Paginator } from 'primereact/paginator';
@@ -121,8 +120,14 @@ function List() {
         );
     };
 
-    const dateBodyTemplate = (customer: Demo.Customer) => {
-        return formatDate(customer.date);
+    const phoneBodyTemplate = (customer: Demo.Candidate) => {
+        return  (customer.phone);
+    };
+    const emailBodyTemplate = (customer: Demo.Candidate) => {
+        return  (customer.email);
+    };
+    const rateBodyTemplate = (customer: Demo.Candidate) => {
+        return  (customer.rate);
     };
 
     const activityBodyTemplate = (customer: Demo.Customer) => {
@@ -135,6 +140,11 @@ function List() {
         setOffset(event.first)
         setLimit(event.rows)
     };
+     
+    const onRowClick = (event:any) => {
+        // Here, you can access the selected row data
+        router.push(`/edit/candidate/${event.data.id}`); 
+      }; 
     return (
         <div className="card">
             <DataTable
@@ -142,10 +152,12 @@ function List() {
                 value={candidatesData.candidates}
                 header={header}
                 filters={filters}
+                onRowClick={onRowClick}
             >
-                <Column field="" header="" sortable  headerClassName="white-space-nowrap" style={{ width: '25%' }}></Column>
-                <Column field="name" header="Name" sortable body={nameBodyTemplate} headerClassName="white-space-nowrap" style={{ width: '25%' }}></Column>
-                 
+                <Column field="" header="" sortable  headerClassName="white-space-nowrap" style={{ width: '15%' }}></Column>
+                <Column field="name" header="Name"   sortable body={nameBodyTemplate} headerClassName="white-space-nowrap" style={{ width: '25%' }}></Column>
+                <Column field="phone" header="Phone"   sortable body={phoneBodyTemplate} headerClassName="white-space-nowrap" style={{ width: '25%' }}></Column> 
+                <Column field="email" header="Email"   sortable body={emailBodyTemplate} headerClassName="white-space-nowrap" style={{ width: '25%' }}></Column> 
             </DataTable>
             <Paginator
                 first={offset}

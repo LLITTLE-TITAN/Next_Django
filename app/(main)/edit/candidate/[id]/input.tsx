@@ -26,6 +26,8 @@ const EditForm = ({ candidateData, id, skillItem, skillsData }: any) => {
   } = useForm({
     defaultValues: {
       ...candidateData.candidateById,
+      firstname:candidateData.candidateById.name.split(' ')[0],
+      lastname:candidateData.candidateById.name.split(' ')[1],
       skillItem: skillItem,
     },
   });
@@ -71,8 +73,8 @@ const EditForm = ({ candidateData, id, skillItem, skillsData }: any) => {
     console.log(e);
     try {
       const {
-        first_name = "",
-        last_name,
+        firstname = "",
+        lastname,
         email,
         phone,
         skillId,
@@ -82,7 +84,7 @@ const EditForm = ({ candidateData, id, skillItem, skillsData }: any) => {
         referred,
       } = e;
       const date = new Date().toISOString().split("T")[0];
-      const name = first_name;
+      const name=firstname+' '+lastname;
 
       const { data } = await update_candidate({
         variables: { name, phone, email, rateSalary,skillId: parseInt(selectedskillItem.id) },
@@ -95,10 +97,12 @@ const EditForm = ({ candidateData, id, skillItem, skillsData }: any) => {
       // Handle error, show error message, etc.
     }
   });
+  console.log(register('name'))
   useEffect(() => {
    
     reset({
         ...candidateData.candidateById,
+        
         skillItem: skillItem,
       }); // asynchronously reset your form values
   }, [reset, candidateData,skillItem]);
@@ -113,7 +117,7 @@ const EditForm = ({ candidateData, id, skillItem, skillsData }: any) => {
                   <label htmlFor="name2">* First name</label>
                   <InputText
                     id="name2"
-                    {...register("name")}
+                    {...register("firstname")}
                     type="text"
                     placeholder="Legal first name"
                     required
@@ -166,26 +170,12 @@ const EditForm = ({ candidateData, id, skillItem, skillsData }: any) => {
                   <label htmlFor="name2">* Last Name</label>
                   <InputText
                     id="name2"
-                    name="last_name"
                     type="text"
+                    {...register("lastname")}
                     placeholder="Legal last name"
-                    value={candidateData.candidateById.name.split(/\s{1,3}/)[1]}
-                    required
                   />
                 </div>
-                <div
-                  className="field col"
-                  id="last_name-error"
-                  aria-live="polite"
-                  aria-atomic="true"
-                >
-                  {state.errors?.last_name &&
-                    state.errors.last_name.map((error: string) => (
-                      <p className="mt-2 text-sm text-red-500" key={error}>
-                        {error}
-                      </p>
-                    ))}
-                </div>
+                 
               </div>
               <div className="flex-col field col">
                 <div className="field col">
@@ -321,7 +311,7 @@ const EditForm = ({ candidateData, id, skillItem, skillsData }: any) => {
                 <div className="flex-col field col">
                   <div className="field">
                     <label htmlFor="city">* City</label>
-                    <InputText id="city" name="city" type="text" required />
+                    <InputText id="city" name="city" type="text"  />
                   </div>
                   <div
                     className="field col"
@@ -340,7 +330,7 @@ const EditForm = ({ candidateData, id, skillItem, skillsData }: any) => {
                 <div className="flex-col field col">
                   <div className="field text-gray-500">
                     <label htmlFor="visa">Visa</label>
-                    <InputText id="visa" name="visa" type="text" required />
+                    <InputText id="visa" name="visa" type="text"  />
                   </div>
                   <div
                     className="field col"
@@ -363,7 +353,7 @@ const EditForm = ({ candidateData, id, skillItem, skillsData }: any) => {
                       id="name2"
                       name="referred"
                       type="text"
-                      required
+                      
                     />
                   </div>
                   <div

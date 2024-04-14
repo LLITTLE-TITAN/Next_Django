@@ -84,11 +84,6 @@ const AppTopbar = forwardRef<AppTopbarRef>((props, ref) => {
                                 icon: 'pi pi-fw pi-list',
                                 command: () => router.push('/add_candidate')
                             },
-                            {
-                                label: 'Edit Candidates',
-                                icon: 'pi pi-fw pi-list',
-                                command: () => router.push('/edit_candidate')
-                            },
                         ]
                     }
                 ],

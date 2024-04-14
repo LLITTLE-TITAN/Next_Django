@@ -95,7 +95,7 @@ const FormLayoutDemo = () => {
         referred,
       } = input;
       const date = new Date().toISOString().split("T")[0];
-      const name = first_name; 
+      const name = first_name+" "+last_name; 
       const { data } = await createCandidate({
         variables: { name, phone, email, rate,skillId: Number( skillItem.id) },
       });
@@ -176,7 +176,6 @@ const FormLayoutDemo = () => {
                     name="last_name"
                     type="text"
                     placeholder="Legal last name"
-                    required
                   />
                 </div>
                 <div
@@ -322,7 +321,7 @@ const FormLayoutDemo = () => {
                 <div className="flex-col field col">
                   <div className="field">
                     <label htmlFor="city">* City</label>
-                    <InputText id="city" name="city" type="text" required />
+                    <InputText id="city" name="city" type="text"   />
                   </div>
                   <div
                     className="field col"
@@ -341,7 +340,7 @@ const FormLayoutDemo = () => {
                 <div className="flex-col field col">
                   <div className="field text-gray-500">
                     <label htmlFor="visa">Visa</label>
-                    <InputText id="visa" name="visa" type="text" required />
+                    <InputText id="visa" name="visa" type="text"   />
                   </div>
                   <div
                     className="field col"
@@ -364,7 +363,7 @@ const FormLayoutDemo = () => {
                       id="name2"
                       name="referred"
                       type="text"
-                      required
+                       
                     />
                   </div>
                   <div

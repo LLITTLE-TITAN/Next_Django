@@ -228,7 +228,14 @@ declare namespace Demo {
         paid: boolean;
         date: string;
     };
+    type Candidate = {
+        id?:string;
+        name?:string;
+        phone?:string;
+        email?:string;
+        rate?:string;
 
+    }
     //CustomerService
     type Customer = {
         id?: number;
