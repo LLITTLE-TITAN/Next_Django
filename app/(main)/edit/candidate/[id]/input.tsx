@@ -18,7 +18,16 @@ interface DropdownItem {
 
 const EditForm = ({candidateData}:any ) => {
    const router=useRouter();
-     
+   const {
+    handleSubmit,
+    register,
+    reset,
+    formState: { errors },
+  } = useForm({
+    defaultValues: {
+      ...candidateData.candidateById,
+    },
+  });
     const [dropdownItem, setDropdownItem] = useState<DropdownItem | null>(null);
     const [checkboxValue, setCheckboxValue] = useState<string[]>([]);
     const dropdownItems: DropdownItem[] = useMemo(
@@ -57,37 +66,25 @@ const EditForm = ({candidateData}:any ) => {
     const initialState = { message: null, errors: {} }; 
     const [state, dispatch] = useFormState(create_candidate, initialState);
      
-    const [formData,setFormData]=useState<any>({});
-    const [loaded, setLoaded]=useState<Boolean>(false); 
-    useEffect(()=>{
-        if(candidateData.candidateById)
-        setFormData(candidateData.candidateById)
-    },[]); 
-
-
-    
-     
-
-    const onSubmit = async (e:any) => {
-        const [update_candidate] = useMutation(EDIT_CANDIDATE);
-        e.preventDefault();
+    const [update_candidate] = useMutation(EDIT_CANDIDATE);
+    const onSubmit = handleSubmit(async (e:any) => {
+         
+        console.log(e)
         try {
-          const formData = new FormData(e.target);
-          const input = Object.fromEntries(formData.entries());
-          console.log(input)
-          const { first_name, 
+          
+          const { first_name='', 
             last_name, 
             email,
             phone,
             skill,
-            rate,
+            rateSalary,
             city,
             visa,
-            referred } = input;
+            referred } = e;
         const date = new Date().toISOString().split('T')[0];
         const name = first_name 
 
-          const { data } = await update_candidate({ variables: { name,phone,email,rate } });
+          const { data } = await update_candidate({ variables: { name,phone,email,rateSalary } });
           router.push('/candidate_list'); 
          
           // Handle success, reset form, show success message, etc.
@@ -95,8 +92,10 @@ const EditForm = ({candidateData}:any ) => {
           console.error('Error creating candidate:', error);
           // Handle error, show error message, etc.
         }
-      };
-    
+      });
+      useEffect(() => {
+        reset(candidateData.candidateById); // asynchronously reset your form values
+      }, [reset, candidateData]);
     return (
         <form onSubmit={onSubmit}>
             <div className="grid">
@@ -106,7 +105,7 @@ const EditForm = ({candidateData}:any ) => {
                             <div className='flex-col field col'>
                                 <div className="field col">
                                     <label htmlFor="name2">* First name</label>
-                                    <InputText id="name2" value={candidateData.candidateById.name.split(' ')[0]}  type="text" placeholder="Legal first name" required  {...register('first_name', { required: 'Task is required' })}
+                                    <InputText id="name2" value={candidateData.candidateById.name.split(' ')[0]}  type="text" placeholder="Legal first name" required   name="first_name"
                                     />
                                 </div>
                                 <div className="field col" id="first_name-error" aria-live="polite" aria-atomic="true">
@@ -121,7 +120,7 @@ const EditForm = ({candidateData}:any ) => {
                             <div className='flex-col field col'>
                                 <div className="field col">
                                     <label htmlFor="email2">* Email address</label>
-                                    <InputText id="email2" name="email" type="text" placeholder="Email address" required value={candidateData.candidateById.email} />
+                                    <InputText id="email2"   type="text" placeholder="Email address" required   {...register('email')} />
                                 </div>
                                 <div className="field col" id="email-error" aria-live="polite" aria-atomic="true">
                                     {state.errors?.email &&
@@ -138,7 +137,7 @@ const EditForm = ({candidateData}:any ) => {
                             <div className='flex-col field col'>
                                 <div className="field col">
                                     <label htmlFor="name2">* Last Name</label>
-                                    <InputText id="name2" name="last_name" type="text" placeholder="Legal last name"  value={candidateData.candidateById.name.split(/\s{1,3}/)[1]} required />
+                                    <InputText id="name2" name="last_name" type="text" placeholder="Legal last name"  value={candidateData.candidateById.name.split(/\s{1,3}/)[1]} required  />
                                 </div>
                                 <div className="field col" id="last_name-error" aria-live="polite" aria-atomic="true">
                                     {state.errors?.last_name &&
@@ -152,7 +151,7 @@ const EditForm = ({candidateData}:any ) => {
                             <div className='flex-col field col'>
                                 <div className="field col">
                                     <label htmlFor="phone2">* Phone</label>
-                                    <InputText id="phone2" name="phone" type="text" placeholder="Phone number" value={candidateData.candidateById.phone} required />
+                                    <InputText id="phone2"   {...register('phone')} type="text" placeholder="Phone number"   required />
                                 </div>
                                 <div className="field col" id="phone-error" aria-live="polite" aria-atomic="true">
                                     {state.errors?.phone &&
@@ -223,7 +222,7 @@ const EditForm = ({candidateData}:any ) => {
                                 <div className='flex-col field col'>
                                     <div className="field">
                                         <label htmlFor="number">* Rate salary</label>
-                                        <InputText id="number" name="rate" type="text" required value={candidateData.candidateById.rateSalary}/>
+                                        <InputText id="number"  type="text" required   {...register('rateSalary')}/>
                                     </div>
                                     <div className="field col" id="rate-error" aria-live="polite" aria-atomic="true">
                                         {state.errors?.rate &&
