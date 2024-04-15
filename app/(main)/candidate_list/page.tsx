@@ -1,5 +1,5 @@
 'use client';
-import { useRouter } from 'next/navigation';
+
 import { FilterMatchMode, FilterOperator } from 'primereact/api';
 import { Button } from 'primereact/button';
 import { Column } from 'primereact/column';
@@ -8,35 +8,45 @@ import { InputText } from 'primereact/inputtext';
 import { ProgressBar } from 'primereact/progressbar';
 import React, { useEffect, useRef, useState } from 'react';
 import { CustomerService } from '@/demo/service/CustomerService';
-import type { Demo } from '@/types'; 
-import { useQuery, gql } from '@apollo/client';
+import type { Demo } from '@/types';
 import ReactHtmlParser from 'react-html-parser';
 import { Paginator } from 'primereact/paginator';
+import useSWR from 'swr'
+import { useSearchParams, usePathname, useRouter } from 'next/navigation';
+
 function List() {
-     
-    const [filters, setFilters] = useState<DataTableFilterMeta>({}); 
+    const searchParams = useSearchParams();
+    const [offset, setOffset] = useState(0);
+    const [limit, setLimit] = useState(50);
+    const pathname = usePathname();
+    const { replace } = useRouter();
+    useEffect(() => {
+        const params = new URLSearchParams(searchParams);
+        params.set('offset', `${offset}`);
+        params.set('limit', `${limit}`)
+        replace(`/api/fetch_candidate?${params.toString()}`);
+    }
+        , [offset, limit]);
+    const fetcher = (url: string) => fetch(url).then((res) => res.json());
+    const { data, error, isLoading } = useSWR(
+        'api/fetch_candidate',
+        fetcher
+    )
+    if (isLoading) return <p>Loading...</p>;
+    
+    const [filters, setFilters] = useState<DataTableFilterMeta>({});
     const [globalFilterValue, setGlobalFilterValue] = useState('');
-    const router = useRouter();
+
     const dt = useRef(null);
-    const [offset,setOffset]=useState(0);
-    const [limit,setLimit]=useState(50);
-    const GET_DATA = gql`
-    query {
-    candidates(offset:${offset},limit:${limit}) {
-        id
-        name
-        email
-        phone 
-    }
-    }
-    `; 
-    const GET_Candidate_COUNT=gql`
+    /*
+    const GET_Candidate_COUNT = gql`
     query {
         pageInfoCandidates{
             totalCount
         }
     }
-    `;
+    `;*/
+    const router = useRouter();
     const formatDate = (value: Date) => {
         return value.toLocaleDateString('en-US', {
             day: '2-digit',
@@ -68,9 +78,8 @@ function List() {
         });
         setGlobalFilterValue('');
     };
-    const { loading, error, data:candidatesData } = useQuery(GET_DATA);
-    const {loading:countsloading, error:countserror, data:countsData}=useQuery(GET_Candidate_COUNT);
-    if (loading||countsloading) return <p>Loading...</p>; 
+
+    //const { loading: countsloading, error: countserror, data: countsData } = useQuery(GET_Candidate_COUNT);
 
 
     const onGlobalFilterChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -121,13 +130,13 @@ function List() {
     };
 
     const phoneBodyTemplate = (customer: Demo.Candidate) => {
-        return  (customer.phone);
+        return (customer.phone);
     };
     const emailBodyTemplate = (customer: Demo.Candidate) => {
-        return  (customer.email);
+        return (customer.email);
     };
     const rateBodyTemplate = (customer: Demo.Candidate) => {
-        return  (customer.rate);
+        return (customer.rate);
     };
 
     const activityBodyTemplate = (customer: Demo.Customer) => {
@@ -135,34 +144,34 @@ function List() {
     };
 
     const header = renderHeader();
-    const onPageChange = (event:any) => {
+    const onPageChange = (event: any) => {
         console.log(event)
         setOffset(event.first)
         setLimit(event.rows)
     };
-     
-    const onRowClick = (event:any) => {
+
+    const onRowClick = (event: any) => {
         // Here, you can access the selected row data
-        router.push(`/edit/candidate/${event.data.id}`); 
-      }; 
+        router.push(`/edit/candidate/${event.data.id}`);
+    };
     return (
         <div className="card">
             <DataTable
                 ref={dt}
-                value={candidatesData.candidates}
+                value={data.candidates}
                 header={header}
                 filters={filters}
                 onRowClick={onRowClick}
             >
-                <Column field="" header="" sortable  headerClassName="white-space-nowrap" style={{ width: '15%' }}></Column>
-                <Column field="name" header="Name"   sortable body={nameBodyTemplate} headerClassName="white-space-nowrap" style={{ width: '25%' }}></Column>
-                <Column field="phone" header="Phone"   sortable body={phoneBodyTemplate} headerClassName="white-space-nowrap" style={{ width: '25%' }}></Column> 
-                <Column field="email" header="Email"   sortable body={emailBodyTemplate} headerClassName="white-space-nowrap" style={{ width: '25%' }}></Column> 
+                <Column field="" header="" sortable headerClassName="white-space-nowrap" style={{ width: '15%' }}></Column>
+                <Column field="name" header="Name" sortable body={nameBodyTemplate} headerClassName="white-space-nowrap" style={{ width: '25%' }}></Column>
+                <Column field="phone" header="Phone" sortable body={phoneBodyTemplate} headerClassName="white-space-nowrap" style={{ width: '25%' }}></Column>
+                <Column field="email" header="Email" sortable body={emailBodyTemplate} headerClassName="white-space-nowrap" style={{ width: '25%' }}></Column>
             </DataTable>
             <Paginator
                 first={offset}
                 rows={limit}
-                totalRecords={countsData.pageInfoCandidates.totalCount} // Set totalRecords
+                //totalRecords={countsData.pageInfoCandidates.totalCount} // Set totalRecords
                 rowsPerPageOptions={[10, 25, 50]}
                 onPageChange={onPageChange}
                 pageLinkSize={5}
