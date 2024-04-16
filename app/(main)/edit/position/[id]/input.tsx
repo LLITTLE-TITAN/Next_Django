@@ -10,8 +10,7 @@ import { useFormState } from "react-dom";
 import { create_candidate } from "@/app/lib/actions";
 import { gql, useQuery, useMutation } from "@apollo/client";
 import { useRouter } from "next/navigation";
-import { useForm } from "react-hook-form";
-import { AppContext } from "@/app/providers/approvider";
+import { useForm } from "react-hook-form"; 
 
 interface DropdownItem {
   name: string;
@@ -19,7 +18,7 @@ interface DropdownItem {
 }
 
 const EditForm = ({ candidateData, id, skillItem, skillsData }: any) => {
-  const {offset,limit}=useContext(AppContext);
+  
   const router = useRouter();
   const {
     handleSubmit,
