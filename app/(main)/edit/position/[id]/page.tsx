@@ -23,6 +23,7 @@ const FormLayoutDemo = ({ params }: { params: { id: string } }) => {
         description
         deadline
         location
+       }
     }
     `;
   const { loading, error, data: jobsData } = useQuery(GET_POS);

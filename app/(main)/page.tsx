@@ -165,7 +165,7 @@ function List() {
     };
     const onRowClick = (event:any) => {
         // Here, you can access the selected row data
-        router.push(`/edit/candidate/${event.data.id}`); 
+        router.push(`/edit/position/${event.data.id}`); 
       }; 
     return (
         <div className="card">
