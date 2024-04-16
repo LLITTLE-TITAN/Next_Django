@@ -11,6 +11,7 @@ import { create_candidate } from "@/app/lib/actions";
 import { gql, useQuery, useMutation } from "@apollo/client";
 import { useRouter } from "next/navigation";
 import { useForm } from "react-hook-form";
+import { Calendar } from "primereact/calendar";
 import { AppContext } from "@/app/providers/approvider";
 interface DropdownItem {
   name: string;
@@ -71,7 +72,6 @@ const EditForm = ({ jobData, id, jobItem }: any) => {
       const { data } = await update_job({
         variables: { name, description, deadline, location },
         update: (cache: any) => {
-          console.log(cache);
           const existingTodos: any = cache.readQuery({
             query: gql`
           query {
@@ -120,53 +120,13 @@ const EditForm = ({ jobData, id, jobItem }: any) => {
       ...jobData,
     }); // asynchronously reset your form values
   }, [reset, jobData]);
+
   return (
-    <form action={handleSubmit}>
+    <form onSubmit={onSubmit}>
       <div className="grid">
         <div className="col-12">
           <div className="card p-fluid font-medium text-base">
-            <div className="formgrid grid">
-              <div className="flex-col field col">
-                <div className="field col">
-                  <label htmlFor="account">Account *</label>
-                  <Dropdown
-                    id="account"
-                    className="text-gray-700"
-                    value={dropdownItem}
-                    onChange={(e) => setDropdownItem(e.value)}
-                    options={dropdownItems}
-                    optionLabel="account"
-                    placeholder="Select One"
-                  ></Dropdown>
-                </div>
-                <div
-                  className="field col"
-                  id="account-error"
-                  aria-live="polite"
-                  aria-atomic="true"
-                >
-                  {state.errors?.account &&
-                    state.errors.account.map((error: string) => (
-                      <p className="mt-2 text-sm text-red-500" key={error}>
-                        {error}
-                      </p>
-                    ))}
-                </div>
-              </div>
-              <div className="flex-col field col text-gray-500">
-                <div className="field col">
-                  <label htmlFor="resume">Resume count</label>
-                  <InputNumber
-                    id="resume"
-                    value={inputNumberValue}
-                    onValueChange={(e) => setInputNumberValue(e.value ?? null)}
-                    showButtons
-                    mode="decimal"
-                    required
-                  ></InputNumber>
-                </div>
-              </div>
-            </div>
+            
 
             <div className="formgrid grid text-gray-500">
               <div className="flex-col field col">
@@ -195,7 +155,7 @@ const EditForm = ({ jobData, id, jobItem }: any) => {
               <div className="flex-col field col">
                 <div className="field col">
                   <label htmlFor="job">Job ID *</label>
-                  <InputText id="job" name="job" type="text" required />
+                  <InputText id="job" name="job" type="text"   />
                 </div>
               </div>
               <div className="flex-col field col text-gray-500">
@@ -212,7 +172,7 @@ const EditForm = ({ jobData, id, jobItem }: any) => {
                   <label htmlFor="location">Location *</label>
                   <InputText
                     id="location"
-                    name="location"
+                    {...register("location")}
                     type="text"
                     placeholder="Enter a location"
                     required
@@ -250,22 +210,10 @@ const EditForm = ({ jobData, id, jobItem }: any) => {
                     name="length"
                     type="text"
                     placeholder="Long term"
-                    required
+                     
                   />
                 </div>
-                <div
-                  className="field col"
-                  id="phone-error"
-                  aria-live="polite"
-                  aria-atomic="true"
-                >
-                  {state.errors?.phone &&
-                    state.errors.phone.map((error: string) => (
-                      <p className="mt-2 text-sm text-red-500" key={error}>
-                        {error}
-                      </p>
-                    ))}
-                </div>
+                
               </div>
             </div>
 
@@ -273,21 +221,9 @@ const EditForm = ({ jobData, id, jobItem }: any) => {
               <div className="flex-col field col">
                 <div className="field col">
                   <label htmlFor="name2">Title *</label>
-                  <InputText id="name2" name="title" type="text" required />
+                  <InputText id="name2" {...register("name")} type="text" required />
                 </div>
-                <div
-                  className="field col"
-                  id="state-error"
-                  aria-live="polite"
-                  aria-atomic="true"
-                >
-                  {state.errors?.state &&
-                    state.errors.state.map((error: string) => (
-                      <p className="mt-2 text-sm text-red-500" key={error}>
-                        {error}
-                      </p>
-                    ))}
-                </div>
+                 
               </div>
               <div className="flex-col field col">
                 <div className="field col">
@@ -297,22 +233,10 @@ const EditForm = ({ jobData, id, jobItem }: any) => {
                     name="restriction"
                     type="text"
                     placeholder="W2 or C2C"
-                    required
+                     
                   />
                 </div>
-                <div
-                  className="field col"
-                  id="phone-error"
-                  aria-live="polite"
-                  aria-atomic="true"
-                >
-                  {state.errors?.phone &&
-                    state.errors.phone.map((error: string) => (
-                      <p className="mt-2 text-sm text-red-500" key={error}>
-                        {error}
-                      </p>
-                    ))}
-                </div>
+               
               </div>
             </div>
 
@@ -330,19 +254,7 @@ const EditForm = ({ jobData, id, jobItem }: any) => {
                     placeholder="Select One"
                   ></Dropdown>
                 </div>
-                <div
-                  className="field col"
-                  id="location-error"
-                  aria-live="polite"
-                  aria-atomic="true"
-                >
-                  {state.errors?.location &&
-                    state.errors.location.map((error: string) => (
-                      <p className="mt-2 text-sm text-red-500" key={error}>
-                        {error}
-                      </p>
-                    ))}
-                </div>
+                
               </div>
               <div className="flex-col field col text-gray-500">
                 <div className="field col">
@@ -387,24 +299,11 @@ const EditForm = ({ jobData, id, jobItem }: any) => {
                     <Calendar
                       showIcon
                       showButtonBar
-                      value={calendarValue}
-                      onChange={(e) => setCalendarValue(e.value ?? null)}
-                      required
+                      {...register("deadline")}
+                       
                     />
                   </div>
-                  <div
-                    className="field col"
-                    id="rate-error"
-                    aria-live="polite"
-                    aria-atomic="true"
-                  >
-                    {state.errors?.rate &&
-                      state.errors.rate.map((error: string) => (
-                        <p className="mt-2 text-sm text-red-500" key={error}>
-                          {error}
-                        </p>
-                      ))}
-                  </div>
+                  
                 </div>
 
                 <div className="flex-col field col">
@@ -522,6 +421,7 @@ const EditForm = ({ jobData, id, jobItem }: any) => {
                   <label htmlFor="name2">* Description</label>
                   <InputTextarea
                     placeholder="Your Message"
+                    {...register("description")}
                     rows={5}
                     cols={30}
                   />
