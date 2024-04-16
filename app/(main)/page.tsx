@@ -13,16 +13,14 @@ import { useQuery, gql } from '@apollo/client';
 import ReactHtmlParser from 'react-html-parser';
 import { Paginator } from 'primereact/paginator';
 
+import {AppContext} from '../../providers/approvider';
 function List() {
     const [filters, setFilters] = useState<DataTableFilterMeta>({});
-
+    const {offset,setOffset,limit,setLimit} = useContext(AppContext) 
     const [globalFilterValue, setGlobalFilterValue] = useState('');
     const router = useRouter();
     const dt = useRef(null);
-    const [offset,setOffset]=useState(0);
-    const [limit,setLimit]=useState(50);
-    // const [loading,setLoading]=useState(false);
-    // const [data,setData]=useState([]);
+    
     const GET_DATA = gql`
     query {
     jobs(offset:${offset},limit:${limit}) {
@@ -78,13 +76,7 @@ function List() {
 
     const { loading, error, data:jobsData } = useQuery(GET_DATA);
     const {loading:countsloading, error:countserror, data:countsData}=useQuery(GET_JOB_COUNT);
-    console.log(countsData,jobsData)
-    // useEffect(() => {
-       
-    //    setLoading(loading)     
-    //    setData(data.jobs);   
-    // }, [limit,data]);
-
+    
     if (loading||countsloading) return <p>Loading...</p>; 
 
     const onGlobalFilterChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -171,6 +163,10 @@ function List() {
         setOffset(event.first)
         setLimit(event.rows)
     };
+    const onRowClick = (event:any) => {
+        // Here, you can access the selected row data
+        router.push(`/edit/candidate/${event.data.id}`); 
+      }; 
     return (
         <div className="card">
             <DataTable
@@ -178,6 +174,7 @@ function List() {
                 value={jobsData.jobs}
                 header={header}
                 filters={filters}
+                onRowClick={onRowClick}
             >
                 <Column field="name" header="Job ID-Title" sortable body={nameBodyTemplate} headerClassName="white-space-nowrap" style={{ width: '25%' }}></Column>
                 <Column field="location" header="Location" sortable body={countryBodyTemplate} headerClassName="white-space-nowrap" style={{ width: '25%' }}></Column>
