@@ -6,20 +6,21 @@ import { Column } from 'primereact/column';
 import { DataTable, DataTableFilterMeta } from 'primereact/datatable';
 import { InputText } from 'primereact/inputtext';
 import { ProgressBar } from 'primereact/progressbar';
-import React, { useEffect, useRef, useState } from 'react';
+import React, { useEffect, useRef, useContext,useState } from 'react';
 import { CustomerService } from '@/demo/service/CustomerService';
 import type { Demo } from '@/types'; 
 import { useQuery, gql } from '@apollo/client';
 import ReactHtmlParser from 'react-html-parser';
 import { Paginator } from 'primereact/paginator';
+import {AppContext} from '../../providers/approvider';
+
 function List() {
-     
+    const {offset,setOffset,limit,setLimit} = useContext(AppContext) 
     const [filters, setFilters] = useState<DataTableFilterMeta>({}); 
     const [globalFilterValue, setGlobalFilterValue] = useState('');
     const router = useRouter();
     const dt = useRef(null);
-    const [offset,setOffset]=useState(0);
-    const [limit,setLimit]=useState(50);
+    
     const GET_DATA = gql`
     query {
     candidates(offset:${offset},limit:${limit}) {

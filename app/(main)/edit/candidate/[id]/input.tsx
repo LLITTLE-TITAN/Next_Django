@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useEffect, useMemo } from "react";
+import React, { useState, useEffect, useMemo, useContext } from "react";
 import { Checkbox, CheckboxChangeEvent } from "primereact/checkbox";
 import { InputText } from "primereact/inputtext";
 import { Button } from "primereact/button";
@@ -11,12 +11,15 @@ import { create_candidate } from "@/app/lib/actions";
 import { gql, useQuery, useMutation } from "@apollo/client";
 import { useRouter } from "next/navigation";
 import { useForm } from "react-hook-form";
+import { AppContext } from "@/app/providers/approvider";
+
 interface DropdownItem {
   name: string;
   code: string;
 }
 
 const EditForm = ({ candidateData, id, skillItem, skillsData }: any) => {
+  const {offset,limit}=useContext(AppContext);
   const router = useRouter();
   const {
     handleSubmit,
@@ -47,7 +50,7 @@ const EditForm = ({ candidateData, id, skillItem, skillsData }: any) => {
   const EDIT_CANDIDATE = gql`
     mutation update_candidate($name: String!,$email: String!,$phone: String!,$rateSalary: String!,$skillId:Int!) {
         updateCandidate(id:${id},name: $name,email: $email,phone: $phone,rateSalary: $rateSalary,skillId:$skillId) {
-       
+          
             __typename
      
         }
@@ -67,10 +70,10 @@ const EditForm = ({ candidateData, id, skillItem, skillsData }: any) => {
 
   const initialState = { message: null, errors: {} };
   const [state, dispatch] = useFormState(create_candidate, initialState);
-
+  
   const [update_candidate] = useMutation(EDIT_CANDIDATE);
   const onSubmit = handleSubmit(async (e: any) => {
-    console.log(e);
+   
     try {
       const {
         firstname = "",
@@ -85,9 +88,43 @@ const EditForm = ({ candidateData, id, skillItem, skillsData }: any) => {
       } = e;
       const date = new Date().toISOString().split("T")[0];
       const name=firstname+' '+lastname;
-
+      const skillid = parseInt(selectedskillItem.id);
       const { data } = await update_candidate({
-        variables: { name, phone, email, rateSalary,skillId: parseInt(selectedskillItem.id) },
+        variables: { name, phone, email, rateSalary,skillId: skillid },
+        update: (cache)=>{
+          console.log(cache)
+          const existingTodos:any = cache.readQuery({ query: gql`
+          query {
+          candidates(offset:${offset},limit:${limit})  {
+              id
+              name
+              email
+              phone 
+          }
+          }
+          ` });
+          console.log(existingTodos)
+          const newTodos = existingTodos.candidates.map((t:any) => {
+            if (t.id === id) {
+              return {...t, name,phone,email,rateSalary };
+            } else {
+              return t;
+            }
+          });
+          cache.writeQuery({
+            query:  gql`
+            query {
+            candidates(offset:0,limit:50) {
+                id
+                name
+                email
+                phone 
+            }
+            }
+            ` ,
+            data: {candidates: newTodos}
+          });
+        }
       });
       router.push("/candidate_list");
 

@@ -46,6 +46,9 @@ const FormLayoutDemo = () => {
       ) {
         id
         name
+        email
+        rateSalary
+        phone
       }
     }
   `;
@@ -69,9 +72,46 @@ const FormLayoutDemo = () => {
     setDropdownItem(dropdownItems[0]);
   }, [dropdownItems]);
   const [skillItem,setSkillItem]=useState<any>();
-  const initialState = { message: null, errors: {} };
-  const [state, dispatch] = useFormState(create_candidate, initialState);
-  const [createCandidate] = useMutation(CREATE_CANDIDATE);
+  const initialState = { message: null, errors: {} }; 
+
+
+  const updateCache = (cache:any, {data}:any) => {
+    // If this is for the public feed, do nothing
+     console.log(cache)
+     console.log(data)
+    // Fetch the todos from the cache
+    const existingTodos = cache.readQuery({
+      query: gql`
+      query {
+      candidates(offset:0,limit:50) {
+          id
+          name
+          email
+          phone 
+      }
+      }
+      `
+    });
+    console.log(existingTodos)
+    // // Add the new todo to the cache
+    const newTodo = data.createCandidate;
+    console.log(newTodo)
+    cache.writeQuery({
+      query: gql`
+      query {
+      candidates(offset:0,limit:50) {
+          id
+          name
+          email
+          phone 
+      }
+      }
+      `,
+      data: {candidates: [newTodo, ...existingTodos.candidates]}
+    });
+  };
+
+  const [createCandidate] = useMutation(CREATE_CANDIDATE,{update: updateCache});
 
   const { loading, error, data: skillsData } = useQuery(GET_SkillDATA);
 
@@ -126,19 +166,7 @@ const FormLayoutDemo = () => {
                     required
                   />
                 </div>
-                <div
-                  className="field col"
-                  id="first_name-error"
-                  aria-live="polite"
-                  aria-atomic="true"
-                >
-                  {state.errors?.first_name &&
-                    state.errors.first_name.map((error: string) => (
-                      <p className="mt-2 text-sm text-red-500" key={error}>
-                        {error}
-                      </p>
-                    ))}
-                </div>
+                 
               </div>
               <div className="flex-col field col">
                 <div className="field col">
@@ -151,19 +179,7 @@ const FormLayoutDemo = () => {
                     required
                   />
                 </div>
-                <div
-                  className="field col"
-                  id="email-error"
-                  aria-live="polite"
-                  aria-atomic="true"
-                >
-                  {state.errors?.email &&
-                    state.errors.email.map((error: string) => (
-                      <p className="mt-2 text-sm text-red-500" key={error}>
-                        {error}
-                      </p>
-                    ))}
-                </div>
+                 
               </div>
             </div>
 
@@ -178,19 +194,7 @@ const FormLayoutDemo = () => {
                     placeholder="Legal last name"
                   />
                 </div>
-                <div
-                  className="field col"
-                  id="last_name-error"
-                  aria-live="polite"
-                  aria-atomic="true"
-                >
-                  {state.errors?.last_name &&
-                    state.errors.last_name.map((error: string) => (
-                      <p className="mt-2 text-sm text-red-500" key={error}>
-                        {error}
-                      </p>
-                    ))}
-                </div>
+                 
               </div>
               <div className="flex-col field col">
                 <div className="field col">
@@ -203,19 +207,7 @@ const FormLayoutDemo = () => {
                     required
                   />
                 </div>
-                <div
-                  className="field col"
-                  id="phone-error"
-                  aria-live="polite"
-                  aria-atomic="true"
-                >
-                  {state.errors?.phone &&
-                    state.errors.phone.map((error: string) => (
-                      <p className="mt-2 text-sm text-red-500" key={error}>
-                        {error}
-                      </p>
-                    ))}
-                </div>
+                
               </div>
             </div>
 
@@ -275,19 +267,7 @@ const FormLayoutDemo = () => {
                     placeholder="Select One"
                   ></Dropdown>
                 </div>
-                <div
-                  className="field col"
-                  id="skill-error"
-                  aria-live="polite"
-                  aria-atomic="true"
-                >
-                  {state.errors?.skill &&
-                    state.errors.skill.map((error: string) => (
-                      <p className="mt-2 text-sm text-red-500" key={error}>
-                        {error}
-                      </p>
-                    ))}
-                </div>
+                
               </div>
               <div className="flex-col field col">
                 <div className="field col text-gray-500">
@@ -304,57 +284,21 @@ const FormLayoutDemo = () => {
                     <label htmlFor="number">* Rate salary</label>
                     <InputText id="number" name="rate" type="text" required />
                   </div>
-                  <div
-                    className="field col"
-                    id="rate-error"
-                    aria-live="polite"
-                    aria-atomic="true"
-                  >
-                    {state.errors?.rate &&
-                      state.errors.rate.map((error: string) => (
-                        <p className="mt-2 text-sm text-red-500" key={error}>
-                          {error}
-                        </p>
-                      ))}
-                  </div>
+                  
                 </div>
                 <div className="flex-col field col">
                   <div className="field">
                     <label htmlFor="city">* City</label>
                     <InputText id="city" name="city" type="text"   />
                   </div>
-                  <div
-                    className="field col"
-                    id="rate-error"
-                    aria-live="polite"
-                    aria-atomic="true"
-                  >
-                    {state.errors?.city &&
-                      state.errors.city.map((error: string) => (
-                        <p className="mt-2 text-sm text-red-500" key={error}>
-                          {error}
-                        </p>
-                      ))}
-                  </div>
+                  
                 </div>
                 <div className="flex-col field col">
                   <div className="field text-gray-500">
                     <label htmlFor="visa">Visa</label>
                     <InputText id="visa" name="visa" type="text"   />
                   </div>
-                  <div
-                    className="field col"
-                    id="rate-error"
-                    aria-live="polite"
-                    aria-atomic="true"
-                  >
-                    {state.errors?.visa &&
-                      state.errors.visa.map((error: string) => (
-                        <p className="mt-2 text-sm text-red-500" key={error}>
-                          {error}
-                        </p>
-                      ))}
-                  </div>
+                  
                 </div>
                 <div className="flex-col field col">
                   <div className="field">
@@ -366,19 +310,7 @@ const FormLayoutDemo = () => {
                        
                     />
                   </div>
-                  <div
-                    className="field col"
-                    id="rate-error"
-                    aria-live="polite"
-                    aria-atomic="true"
-                  >
-                    {state.errors?.referred &&
-                      state.errors.referred.map((error: string) => (
-                        <p className="mt-2 text-sm text-red-500" key={error}>
-                          {error}
-                        </p>
-                      ))}
-                  </div>
+                  
                 </div>
               </div>
               <div className="flex-col field col-6">

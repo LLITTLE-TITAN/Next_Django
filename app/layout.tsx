@@ -9,7 +9,7 @@ import '../styles/demo/Demos.scss';
 
 import { ApolloProvider } from '@apollo/client';
 import client from './apolloClient';
-
+import {AppProvider} from './providers/approvider';
 export default function RootLayout({ children }: { children: React.ReactNode }) {
     return (
         <html lang="en" suppressHydrationWarning>
@@ -19,7 +19,10 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
             <body>
                 <ApolloProvider client={client}>
                     <PrimeReactProvider>
+                        <AppProvider>
+
                         <LayoutProvider>{children}</LayoutProvider>
+                        </AppProvider>
                     </PrimeReactProvider>
                 </ApolloProvider>
             </body>
