@@ -19,7 +19,7 @@ interface DropdownItem {
 }
 
 const EditForm = ({ candidateData, id, skillItem, skillsData }: any) => {
-  const {offset,limit}=useContext(AppContext);
+  const { offset, limit } = useContext(AppContext);
   const router = useRouter();
   const {
     handleSubmit,
@@ -29,8 +29,8 @@ const EditForm = ({ candidateData, id, skillItem, skillsData }: any) => {
   } = useForm({
     defaultValues: {
       ...candidateData.candidateById,
-      firstname:candidateData.candidateById.name.split(' ')[0],
-      lastname:candidateData.candidateById.name.split(' ')[1],
+      firstname: candidateData.candidateById.name.split(" ")[0],
+      lastname: candidateData.candidateById.name.split(" ")[1],
       skillItem: skillItem,
     },
   });
@@ -70,10 +70,9 @@ const EditForm = ({ candidateData, id, skillItem, skillsData }: any) => {
 
   const initialState = { message: null, errors: {} };
   const [state, dispatch] = useFormState(create_candidate, initialState);
-  
+
   const [update_candidate] = useMutation(EDIT_CANDIDATE);
   const onSubmit = handleSubmit(async (e: any) => {
-   
     try {
       const {
         firstname = "",
@@ -87,13 +86,14 @@ const EditForm = ({ candidateData, id, skillItem, skillsData }: any) => {
         referred,
       } = e;
       const date = new Date().toISOString().split("T")[0];
-      const name=firstname+' '+lastname;
+      const name = firstname + " " + lastname;
       const skillid = parseInt(selectedskillItem.id);
       const { data } = await update_candidate({
-        variables: { name, phone, email, rateSalary,skillId: skillid },
-        update: (cache)=>{
-          console.log(cache)
-          const existingTodos:any = cache.readQuery({ query: gql`
+        variables: { name, phone, email, rateSalary, skillId: skillid },
+        update: (cache) => {
+          console.log(cache);
+          const existingTodos: any = cache.readQuery({
+            query: gql`
           query {
           candidates(offset:${offset},limit:${limit})  {
               id
@@ -102,29 +102,30 @@ const EditForm = ({ candidateData, id, skillItem, skillsData }: any) => {
               phone 
           }
           }
-          ` });
-          console.log(existingTodos)
-          const newTodos = existingTodos.candidates.map((t:any) => {
+          `,
+          });
+          console.log(existingTodos);
+          const newTodos = existingTodos.candidates.map((t: any) => {
             if (t.id === id) {
-              return {...t, name,phone,email,rateSalary };
+              return { ...t, name, phone, email, rateSalary };
             } else {
               return t;
             }
           });
           cache.writeQuery({
-            query:  gql`
+            query: gql`
             query {
-            candidates(offset:0,limit:50) {
+            candidates(offset:${offset},limit:${limit}) {
                 id
                 name
                 email
                 phone 
             }
             }
-            ` ,
-            data: {candidates: newTodos}
+            `,
+            data: { candidates: newTodos },
           });
-        }
+        },
       });
       router.push("/candidate_list");
 
@@ -134,15 +135,14 @@ const EditForm = ({ candidateData, id, skillItem, skillsData }: any) => {
       // Handle error, show error message, etc.
     }
   });
-  console.log(register('name'))
+  console.log(register("name"));
   useEffect(() => {
-   
     reset({
-        ...candidateData.candidateById,
-        
-        skillItem: skillItem,
-      }); // asynchronously reset your form values
-  }, [reset, candidateData,skillItem]);
+      ...candidateData.candidateById,
+
+      skillItem: skillItem,
+    }); // asynchronously reset your form values
+  }, [reset, candidateData, skillItem]);
   return (
     <form onSubmit={onSubmit}>
       <div className="grid">
@@ -212,7 +212,6 @@ const EditForm = ({ candidateData, id, skillItem, skillsData }: any) => {
                     placeholder="Legal last name"
                   />
                 </div>
-                 
               </div>
               <div className="flex-col field col">
                 <div className="field col">
@@ -348,7 +347,7 @@ const EditForm = ({ candidateData, id, skillItem, skillsData }: any) => {
                 <div className="flex-col field col">
                   <div className="field">
                     <label htmlFor="city">* City</label>
-                    <InputText id="city" name="city" type="text"  />
+                    <InputText id="city" name="city" type="text" />
                   </div>
                   <div
                     className="field col"
@@ -367,7 +366,7 @@ const EditForm = ({ candidateData, id, skillItem, skillsData }: any) => {
                 <div className="flex-col field col">
                   <div className="field text-gray-500">
                     <label htmlFor="visa">Visa</label>
-                    <InputText id="visa" name="visa" type="text"  />
+                    <InputText id="visa" name="visa" type="text" />
                   </div>
                   <div
                     className="field col"
@@ -386,12 +385,7 @@ const EditForm = ({ candidateData, id, skillItem, skillsData }: any) => {
                 <div className="flex-col field col">
                   <div className="field">
                     <label htmlFor="name2">* Referred by</label>
-                    <InputText
-                      id="name2"
-                      name="referred"
-                      type="text"
-                      
-                    />
+                    <InputText id="name2" name="referred" type="text" />
                   </div>
                   <div
                     className="field col"

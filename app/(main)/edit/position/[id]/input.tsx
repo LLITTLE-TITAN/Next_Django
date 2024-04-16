@@ -10,15 +10,15 @@ import { useFormState } from "react-dom";
 import { create_candidate } from "@/app/lib/actions";
 import { gql, useQuery, useMutation } from "@apollo/client";
 import { useRouter } from "next/navigation";
-import { useForm } from "react-hook-form"; 
-
+import { useForm } from "react-hook-form";
+import { AppContext } from "@/app/providers/approvider";
 interface DropdownItem {
   name: string;
   code: string;
 }
 
-const EditForm = ({ candidateData, id, skillItem, skillsData }: any) => {
-  
+const EditForm = ({ jobData, id, jobItem }: any) => {
+  const { offset, limit } = useContext(AppContext);
   const router = useRouter();
   const {
     handleSubmit,
@@ -27,10 +27,7 @@ const EditForm = ({ candidateData, id, skillItem, skillsData }: any) => {
     formState: { errors },
   } = useForm({
     defaultValues: {
-      ...candidateData.candidateById,
-      firstname:candidateData.candidateById.name.split(' ')[0],
-      lastname:candidateData.candidateById.name.split(' ')[1],
-      skillItem: skillItem,
+      ...jobData,
     },
   });
   const [dropdownItem, setDropdownItem] = useState<DropdownItem | null>(null);
@@ -45,10 +42,9 @@ const EditForm = ({ candidateData, id, skillItem, skillsData }: any) => {
     ],
     []
   );
-  const [selectedskillItem, setSelectedskillItem] = useState<any>(skillItem);
-  const EDIT_CANDIDATE = gql`
-    mutation update_candidate($name: String!,$email: String!,$phone: String!,$rateSalary: String!,$skillId:Int!) {
-        updateCandidate(id:${id},name: $name,email: $email,phone: $phone,rateSalary: $rateSalary,skillId:$skillId) {
+  const EDIT_JOB = gql`
+    mutation update_job($name: String!,$description: String!,$deadline: String!,$location: String!,) {
+        updateJob(id:${id},name: $name,description: $description,deadline: $deadline,location: $location ) {
           
             __typename
      
@@ -67,65 +63,51 @@ const EditForm = ({ candidateData, id, skillItem, skillsData }: any) => {
     setDropdownItem(dropdownItems[0]);
   }, [dropdownItems]);
 
-  const initialState = { message: null, errors: {} };
-  const [state, dispatch] = useFormState(create_candidate, initialState);
-  
-  const [update_candidate] = useMutation(EDIT_CANDIDATE);
+  const [update_job] = useMutation(EDIT_JOB);
   const onSubmit = handleSubmit(async (e: any) => {
-   
     try {
-      const {
-        firstname = "",
-        lastname,
-        email,
-        phone,
-        skillId,
-        rateSalary,
-        city,
-        visa,
-        referred,
-      } = e;
+      const { name, deadline, description, location } = e;
       const date = new Date().toISOString().split("T")[0];
-      const name=firstname+' '+lastname;
-      const skillid = parseInt(selectedskillItem.id);
-      const { data } = await update_candidate({
-        variables: { name, phone, email, rateSalary,skillId: skillid },
-        update: (cache)=>{
-          console.log(cache)
-          const existingTodos:any = cache.readQuery({ query: gql`
+      const { data } = await update_job({
+        variables: { name, description, deadline, location },
+        update: (cache: any) => {
+          console.log(cache);
+          const existingTodos: any = cache.readQuery({
+            query: gql`
           query {
-          candidates(offset:${offset},limit:${limit})  {
+          jobs(offset:${offset},limit:${limit})  {
               id
               name
-              email
-              phone 
+              description
+              location
+              deadline
           }
           }
-          ` });
-          console.log(existingTodos)
-          const newTodos = existingTodos.candidates.map((t:any) => {
+          `,
+          });
+          const newTodos = existingTodos.jobs.map((t: any) => {
             if (t.id === id) {
-              return {...t, name,phone,email,rateSalary };
+              return { ...t, name, location, deadline, description };
             } else {
               return t;
             }
           });
           cache.writeQuery({
-            query:  gql`
-            query {
-            candidates(offset:0,limit:50) {
-                id
-                name
-                email
-                phone 
-            }
-            }
-            ` ,
-            data: {candidates: newTodos}
+            query: gql`
+              query {
+                jobs(offset:${offset},limit:${limit}) {
+                  id
+                  name
+                  email
+                  phone
+                }
+              }
+            `,
+            data: { jobs: newTodos },
           });
-        }
+        },
       });
-      router.push("/candidate_list");
+      router.push("/");
 
       // Handle success, reset form, show success message, etc.
     } catch (error) {
@@ -133,69 +115,78 @@ const EditForm = ({ candidateData, id, skillItem, skillsData }: any) => {
       // Handle error, show error message, etc.
     }
   });
-  console.log(register('name'))
   useEffect(() => {
-   
     reset({
-        ...candidateData.candidateById,
-        
-        skillItem: skillItem,
-      }); // asynchronously reset your form values
-  }, [reset, candidateData,skillItem]);
+      ...jobData,
+    }); // asynchronously reset your form values
+  }, [reset, jobData]);
   return (
-    <form onSubmit={onSubmit}>
+    <form action={handleSubmit}>
       <div className="grid">
         <div className="col-12">
           <div className="card p-fluid font-medium text-base">
             <div className="formgrid grid">
               <div className="flex-col field col">
                 <div className="field col">
-                  <label htmlFor="name2">* First name</label>
-                  <InputText
-                    id="name2"
-                    {...register("firstname")}
-                    type="text"
-                    placeholder="Legal first name"
-                    required
-                  />
+                  <label htmlFor="account">Account *</label>
+                  <Dropdown
+                    id="account"
+                    className="text-gray-700"
+                    value={dropdownItem}
+                    onChange={(e) => setDropdownItem(e.value)}
+                    options={dropdownItems}
+                    optionLabel="account"
+                    placeholder="Select One"
+                  ></Dropdown>
                 </div>
                 <div
                   className="field col"
-                  id="first_name-error"
+                  id="account-error"
                   aria-live="polite"
                   aria-atomic="true"
                 >
-                  {state.errors?.first_name &&
-                    state.errors.first_name.map((error: string) => (
+                  {state.errors?.account &&
+                    state.errors.account.map((error: string) => (
                       <p className="mt-2 text-sm text-red-500" key={error}>
                         {error}
                       </p>
                     ))}
                 </div>
               </div>
+              <div className="flex-col field col text-gray-500">
+                <div className="field col">
+                  <label htmlFor="resume">Resume count</label>
+                  <InputNumber
+                    id="resume"
+                    value={inputNumberValue}
+                    onValueChange={(e) => setInputNumberValue(e.value ?? null)}
+                    showButtons
+                    mode="decimal"
+                    required
+                  ></InputNumber>
+                </div>
+              </div>
+            </div>
+
+            <div className="formgrid grid text-gray-500">
               <div className="flex-col field col">
                 <div className="field col">
-                  <label htmlFor="email2">* Email address</label>
-                  <InputText
-                    id="email2"
-                    type="text"
-                    placeholder="Email address"
-                    required
-                    {...register("email")}
-                  />
+                  <label htmlFor="name2">Assigned to</label>
+                  <Dropdown
+                    id="account"
+                    className="text-gray-700"
+                    value={dropdownItem}
+                    onChange={(e) => setDropdownItem(e.value)}
+                    options={dropdownItems}
+                    optionLabel="account"
+                    placeholder="Select One"
+                  ></Dropdown>
                 </div>
-                <div
-                  className="field col"
-                  id="email-error"
-                  aria-live="polite"
-                  aria-atomic="true"
-                >
-                  {state.errors?.email &&
-                    state.errors.email.map((error: string) => (
-                      <p className="mt-2 text-sm text-red-500" key={error}>
-                        {error}
-                      </p>
-                    ))}
+              </div>
+              <div className="flex-col field col">
+                <div className="field col">
+                  <label htmlFor="resume">Submitted resumes</label>
+                  <InputText id="resume" name="resume" type="text" />
                 </div>
               </div>
             </div>
@@ -203,24 +194,62 @@ const EditForm = ({ candidateData, id, skillItem, skillsData }: any) => {
             <div className="formgrid grid">
               <div className="flex-col field col">
                 <div className="field col">
-                  <label htmlFor="name2">* Last Name</label>
+                  <label htmlFor="job">Job ID *</label>
+                  <InputText id="job" name="job" type="text" required />
+                </div>
+              </div>
+              <div className="flex-col field col text-gray-500">
+                <div className="field col">
+                  <label htmlFor="resume">Queued resumes</label>
+                  <InputText id="resume" type="text" />
+                </div>
+              </div>
+            </div>
+
+            <div className="formgrid grid">
+              <div className="flex-col field col">
+                <div className="field col">
+                  <label htmlFor="location">Location *</label>
                   <InputText
-                    id="name2"
+                    id="location"
+                    name="location"
                     type="text"
-                    {...register("lastname")}
-                    placeholder="Legal last name"
+                    placeholder="Enter a location"
+                    required
                   />
                 </div>
-                 
+              </div>
+              <div className="flex-col field col text-gray-500">
+                <div className="field col">
+                  <label htmlFor="resume">Potential resumes</label>
+                  <InputText id="resume" type="text" />
+                </div>
+              </div>
+            </div>
+
+            <div className="formgrid grid">
+              <div className="flex-col field col">
+                <div className="field col">
+                  <label htmlFor="name2">State *</label>
+                  <Dropdown
+                    id="account"
+                    className="text-gray-700"
+                    value={dropdownItem}
+                    onChange={(e) => setDropdownItem(e.value)}
+                    options={dropdownItems}
+                    optionLabel="account"
+                    placeholder="Select One"
+                  ></Dropdown>
+                </div>
               </div>
               <div className="flex-col field col">
                 <div className="field col">
-                  <label htmlFor="phone2">* Phone</label>
+                  <label htmlFor="length">Length *</label>
                   <InputText
-                    id="phone2"
-                    {...register("phone")}
+                    id="length"
+                    name="length"
                     type="text"
-                    placeholder="Phone number"
+                    placeholder="Long term"
                     required
                   />
                 </div>
@@ -240,10 +269,93 @@ const EditForm = ({ candidateData, id, skillItem, skillsData }: any) => {
               </div>
             </div>
 
+            <div className="formgrid grid">
+              <div className="flex-col field col">
+                <div className="field col">
+                  <label htmlFor="name2">Title *</label>
+                  <InputText id="name2" name="title" type="text" required />
+                </div>
+                <div
+                  className="field col"
+                  id="state-error"
+                  aria-live="polite"
+                  aria-atomic="true"
+                >
+                  {state.errors?.state &&
+                    state.errors.state.map((error: string) => (
+                      <p className="mt-2 text-sm text-red-500" key={error}>
+                        {error}
+                      </p>
+                    ))}
+                </div>
+              </div>
+              <div className="flex-col field col">
+                <div className="field col">
+                  <label htmlFor="length">Restriction *</label>
+                  <InputText
+                    id="length"
+                    name="restriction"
+                    type="text"
+                    placeholder="W2 or C2C"
+                    required
+                  />
+                </div>
+                <div
+                  className="field col"
+                  id="phone-error"
+                  aria-live="polite"
+                  aria-atomic="true"
+                >
+                  {state.errors?.phone &&
+                    state.errors.phone.map((error: string) => (
+                      <p className="mt-2 text-sm text-red-500" key={error}>
+                        {error}
+                      </p>
+                    ))}
+                </div>
+              </div>
+            </div>
+
+            <div className="formgrid grid">
+              <div className="flex-col field col">
+                <div className="field col">
+                  <label htmlFor="location">* Skill</label>
+                  <Dropdown
+                    id="account"
+                    className="text-gray-700"
+                    value={dropdownItem}
+                    onChange={(e) => setDropdownItem(e.value)}
+                    options={dropdownItems}
+                    optionLabel="account"
+                    placeholder="Select One"
+                  ></Dropdown>
+                </div>
+                <div
+                  className="field col"
+                  id="location-error"
+                  aria-live="polite"
+                  aria-atomic="true"
+                >
+                  {state.errors?.location &&
+                    state.errors.location.map((error: string) => (
+                      <p className="mt-2 text-sm text-red-500" key={error}>
+                        {error}
+                      </p>
+                    ))}
+                </div>
+              </div>
+              <div className="flex-col field col text-gray-500">
+                <div className="field col">
+                  <label htmlFor="resume">W2 rate</label>
+                  <InputText id="resume" type="text" />
+                </div>
+              </div>
+            </div>
+
             <div className="formgrid grid text-gray-500">
               <div className="flex-col field col">
                 <div className="field col">
-                  <label htmlFor="state">Status</label>
+                  <label htmlFor="state">Department</label>
                   <Dropdown
                     id="state"
                     className="text-gray-700"
@@ -257,7 +369,7 @@ const EditForm = ({ candidateData, id, skillItem, skillsData }: any) => {
               </div>
               <div className="flex-col field col">
                 <div className="field col">
-                  <label htmlFor="phone2">Best time to call</label>
+                  <label htmlFor="phone2">C2C 1099</label>
                   <InputText
                     id="phone2"
                     type="text"
@@ -267,67 +379,17 @@ const EditForm = ({ candidateData, id, skillItem, skillsData }: any) => {
               </div>
             </div>
 
-            <div className="formgrid grid text-gray-500">
-              <div className="flex-col field col">
-                <div className="field col">
-                  <label htmlFor="name2">Review status</label>
-                  <InputText id="name2" type="text" />
-                </div>
-              </div>
-              <div className="flex-col field col">
-                <div className="field col">
-                  <label htmlFor="phone2">State</label>
-                  <InputText id="phone2" type="text" />
-                </div>
-              </div>
-            </div>
-
-            <div className="formgrid grid ">
-              <div className="flex-col field col">
-                <div className="field col">
-                  <label htmlFor="skill">* Skill</label>
-                  <Dropdown
-                    id="skill"
-                    className="text-gray-700"
-                    options={skillsData}
-                    value={selectedskillItem}
-                    onChange={(e) => setSelectedskillItem(e.value)}
-                    optionLabel="name"
-                    placeholder="Select One"
-                  ></Dropdown>
-                </div>
-                <div
-                  className="field col"
-                  id="skill-error"
-                  aria-live="polite"
-                  aria-atomic="true"
-                >
-                  {state.errors?.skill &&
-                    state.errors.skill.map((error: string) => (
-                      <p className="mt-2 text-sm text-red-500" key={error}>
-                        {error}
-                      </p>
-                    ))}
-                </div>
-              </div>
-              <div className="flex-col field col">
-                <div className="field col text-gray-500">
-                  <label htmlFor="phone2">Years of experience</label>
-                  <InputText id="phone2" type="text" />
-                </div>
-              </div>
-            </div>
-
             <div className="formgrid grid ">
               <div className="field col-6">
                 <div className="flex-col field col">
                   <div className="field">
-                    <label htmlFor="number">* Rate salary</label>
-                    <InputText
-                      id="number"
-                      type="text"
+                    <label htmlFor="number">Exp. date *</label>
+                    <Calendar
+                      showIcon
+                      showButtonBar
+                      value={calendarValue}
+                      onChange={(e) => setCalendarValue(e.value ?? null)}
                       required
-                      {...register("rateSalary")}
                     />
                   </div>
                   <div
@@ -344,129 +406,125 @@ const EditForm = ({ candidateData, id, skillItem, skillsData }: any) => {
                       ))}
                   </div>
                 </div>
-                <div className="flex-col field col">
-                  <div className="field">
-                    <label htmlFor="city">* City</label>
-                    <InputText id="city" name="city" type="text"  />
-                  </div>
-                  <div
-                    className="field col"
-                    id="rate-error"
-                    aria-live="polite"
-                    aria-atomic="true"
-                  >
-                    {state.errors?.city &&
-                      state.errors.city.map((error: string) => (
-                        <p className="mt-2 text-sm text-red-500" key={error}>
-                          {error}
-                        </p>
-                      ))}
-                  </div>
-                </div>
+
                 <div className="flex-col field col">
                   <div className="field text-gray-500">
-                    <label htmlFor="visa">Visa</label>
-                    <InputText id="visa" name="visa" type="text"  />
+                    <label htmlFor="visa">priority</label>
+                    <Dropdown
+                      id="account"
+                      className="text-gray-700"
+                      value={dropdownItem}
+                      onChange={(e) => setDropdownItem(e.value)}
+                      options={dropdownItems}
+                      optionLabel="account"
+                      placeholder="Select One"
+                    ></Dropdown>
                   </div>
-                  <div
-                    className="field col"
-                    id="rate-error"
-                    aria-live="polite"
-                    aria-atomic="true"
-                  >
-                    {state.errors?.visa &&
-                      state.errors.visa.map((error: string) => (
-                        <p className="mt-2 text-sm text-red-500" key={error}>
-                          {error}
-                        </p>
-                      ))}
-                  </div>
+                  <div className="field col"></div>
                 </div>
+
                 <div className="flex-col field col">
-                  <div className="field">
-                    <label htmlFor="name2">* Referred by</label>
+                  <div className="field text-gray-500">
+                    <label htmlFor="name2">Resume template link</label>
                     <InputText
                       id="name2"
-                      name="referred"
                       type="text"
-                      
+                      placeholder="example:http://www.validurl.com"
                     />
                   </div>
-                  <div
-                    className="field col"
-                    id="rate-error"
-                    aria-live="polite"
-                    aria-atomic="true"
-                  >
-                    {state.errors?.referred &&
-                      state.errors.referred.map((error: string) => (
-                        <p className="mt-2 text-sm text-red-500" key={error}>
-                          {error}
-                        </p>
-                      ))}
+                  <div className="field col"></div>
+                </div>
+                <div className="flex row">
+                  <div className="field col-6">
+                    <div className="field-checkbox">
+                      <input type="checkbox" id="city1"></input>
+                      <label
+                        className="bg-transparent text-gray-500"
+                        htmlFor="city1"
+                      >
+                        no opt
+                      </label>
+                    </div>
+                    <div className="field-checkbox">
+                      <input type="checkbox" id="city2"></input>
+                      <label
+                        className="bg-transparent text-gray-500"
+                        htmlFor="city2"
+                      >
+                        W2 only
+                      </label>
+                    </div>
+                    <div className="field-checkbox">
+                      <input type="checkbox" id="city3"></input>
+                      <label
+                        className="bg-transparent text-gray-500"
+                        htmlFor="city3"
+                      >
+                        H1 transfer allowed
+                      </label>
+                    </div>
+                  </div>
+
+                  <div className="field col-6">
+                    <div className="field-checkbox">
+                      <input type="checkbox" id="city4"></input>
+                      <label
+                        className="bg-transparent text-gray-500"
+                        htmlFor="city4"
+                      >
+                        Remote/Telecommute
+                      </label>
+                    </div>
+                    <div className="field-checkbox">
+                      <input type="checkbox" id="city5"></input>
+                      <label
+                        className="bg-transparent text-gray-500"
+                        htmlFor="city5"
+                      >
+                        Active
+                      </label>
+                    </div>
+                    <div className="field-checkbox">
+                      <input type="checkbox" id="city6"></input>
+                      <label
+                        className="bg-transparent text-gray-500 text-sm"
+                        htmlFor="city6"
+                      >
+                        Send ConstantContact emails
+                      </label>
+                    </div>
                   </div>
                 </div>
               </div>
               <div className="flex-col field col-6">
-                <div className="field col">
-                  <div className="field-checkbox">
-                    <input type="checkbox" id="city1"></input>
-                    <label
-                      className="bg-transparent text-gray-500"
-                      htmlFor="city1"
-                    >
-                      Hot
-                    </label>
+                <div className="flex-col field col text-gray-500">
+                  <div className="field">
+                    <label htmlFor="name2">Notes</label>
+                    <InputTextarea
+                      placeholder="Your Message"
+                      rows={5}
+                      cols={30}
+                    />
                   </div>
-                  <div className="field-checkbox">
-                    <input type="checkbox" id="city2"></input>
-                    <label
-                      className="bg-transparent text-gray-500"
-                      htmlFor="city2"
-                    >
-                      Security clearance
-                    </label>
-                  </div>
-                  <div className="field-checkbox">
-                    <input type="checkbox" id="city3"></input>
-                    <label
-                      className="bg-transparent text-gray-500"
-                      htmlFor="city3"
-                    >
-                      Federal Dod experience
-                    </label>
-                  </div>
-                  <div className="field-checkbox">
-                    <input type="checkbox" id="city4"></input>
-                    <label
-                      className="bg-transparent text-gray-500"
-                      htmlFor="city4"
-                    >
-                      State experience
-                    </label>
-                  </div>
-                  <div className="field-checkbox">
-                    <input type="checkbox" id="city5"></input>
-                    <label
-                      className="bg-transparent text-gray-500"
-                      htmlFor="city5"
-                    >
-                      Certified
-                    </label>
-                  </div>
-                  <div className="field-checkbox">
-                    <input type="checkbox" id="city6"></input>
-                    <label
-                      className="bg-transparent text-gray-500"
-                      htmlFor="city6"
-                    >
-                      Relocate
-                    </label>
-                  </div>
+                </div>
+                <div className="flex-col field col">
                   <div className="field text-gray-500">
-                    <label htmlFor="name2">Relocation</label>
+                    <label htmlFor="name2">Keywords</label>
                     <InputText id="name2" type="text" />
                   </div>
+                  <div className="field col"></div>
+                </div>
+              </div>
+            </div>
+            <div className="col-12">
+              <div className="flex-col field col">
+                <div className="field">
+                  <label htmlFor="name2">* Description</label>
+                  <InputTextarea
+                    placeholder="Your Message"
+                    rows={5}
+                    cols={30}
+                  />
                 </div>
               </div>
             </div>
