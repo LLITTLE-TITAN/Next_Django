@@ -21,7 +21,7 @@ const FormLayoutDemo = ({ params }: { params: { id: string } }) => {
   const router = useRouter();
   const id = params.id;
 
-  const GET_CANDIDATE = gql`
+  const GET_POS = gql`
     query candidateById {
         candidateById(id: "${id}") {
         id
