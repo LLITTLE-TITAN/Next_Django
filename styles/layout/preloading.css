@@ -13,6 +13,22 @@
   margin-left: -32px;
   margin-top: -32px;
 }
+/* CSS */
+.table-custom {
+  border-collapse: collapse;
+  width: 100%;
+}
+
+.table-custom th,
+.table-custom td {
+  border: 1px solid #dddddd;
+  text-align: left;
+  padding: 8px;
+}
+
+.table-custom th {
+  background-color: #f2f2f2;
+}
 
 .layout-preloader {
   animation: rotator 1.4s linear infinite;

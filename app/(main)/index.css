@@ -1,0 +1,28 @@
+/* CSS */
+.table-custom {
+    border-collapse: collapse;
+    width: 100%;
+  }
+  
+  .table-custom th,
+  .table-custom td {
+    border: 1px solid #dddddd;
+    text-align: center;
+  }
+  
+  .table-custom th {
+    background-color: #f2f2f2;
+  }
+  .title-custom{
+    color:green;
+    font-weight: bold;
+  }
+  
+ 
+td:has(> .red-bac) {
+    /* Your styles here */
+    background-color: red;
+    padding: 0px;
+    height:100%;
+    width:100%;
+  }

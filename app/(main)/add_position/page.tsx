@@ -48,6 +48,9 @@ const FormLayoutDemo = () => {
       ) {
         id
         name
+        location
+        deadline
+        description
       }
     }
   `;
@@ -63,29 +66,67 @@ const FormLayoutDemo = () => {
   useEffect(() => {
     setDropdownItem(dropdownItems[0]);
   }, [dropdownItems]);
-
-  const initialState = { message: null, errors: {} };
-  const [state, dispatch] = useFormState(create_candidate, initialState);
+ 
   const [inputNumberValue, setInputNumberValue] = useState<number | null>(null);
   const [calendarValue, setCalendarValue] = useState<any>(null);
   const router = useRouter();
-
+  const updateCache = (cache:any, {data}:any) => {
+    // If this is for the public feed, do nothing
+     console.log(cache)
+     console.log(data)
+    // Fetch the todos from the cache
+    const existingTodos = cache.readQuery({
+      query: gql`
+      query {
+      jobs(offset:0,limit:50) {
+          id
+          name
+          deadline
+          description
+          location
+        }
+      }
+      `
+    });
+    console.log(existingTodos)
+    // // Add the new todo to the cache
+    const newJob= data.createJob;
+    console.log(newJob)
+    cache.writeQuery({
+      query: gql`
+      query {
+      jobs(offset:0,limit:50) {
+          id
+          name
+          deadline
+          description
+          location
+      }
+      }
+      `,
+      data: {jobs: [newJob, ...existingTodos.jobs]}
+    });
+  };
+  const [createJob] = useMutation(CREATE_Job,{update: updateCache});
   const handleSubmit = async (e: any) => {
     e.preventDefault();
     try {
       const formData = new FormData(e.target);
       const input = Object.fromEntries(formData.entries());
       const { name, location, deadline, description } = input;
+      const parts = String(deadline).split("/"); // Split the string by "/"
+      const rearrangedDate = `${parts[2]}-${parseInt(parts[0])}-${parseInt(parts[1])}`;
+      console.log(name,location,rearrangedDate,description)
       const date = new Date().toISOString().split("T")[0];
-      const { data } = await CREATE_Job({
+      const { data } = await createJob({
         variables: {
           name,
-          deadline,
+          deadline:rearrangedDate,
           location,
           description,
         },
       });
-      router.push("/");
+      router.push("/candidate_list");
       // Handle success, reset form, show success message, etc.
     } catch (error) {
       console.error("Error creating candidate:", error);
@@ -112,30 +153,16 @@ const FormLayoutDemo = () => {
                     placeholder="Select One"
                   ></Dropdown>
                 </div>
-                <div
-                  className="field col"
-                  id="account-error"
-                  aria-live="polite"
-                  aria-atomic="true"
-                >
-                  {state.errors?.account &&
-                    state.errors.account.map((error: string) => (
-                      <p className="mt-2 text-sm text-red-500" key={error}>
-                        {error}
-                      </p>
-                    ))}
-                </div>
+                 
               </div>
               <div className="flex-col field col text-gray-500">
                 <div className="field col">
                   <label htmlFor="resume">Resume count</label>
                   <InputNumber
                     id="resume"
-                    value={inputNumberValue}
-                    onValueChange={(e) => setInputNumberValue(e.value ?? null)}
+                    name="resumecount"
                     showButtons
                     mode="decimal"
-                    required
                   ></InputNumber>
                 </div>
               </div>
@@ -170,19 +197,7 @@ const FormLayoutDemo = () => {
                   <label htmlFor="job">Job ID *</label>
                   <InputText id="job" name="job" type="text" required />
                 </div>
-                <div
-                  className="field col"
-                  id="job-error"
-                  aria-live="polite"
-                  aria-atomic="true"
-                >
-                  {state.errors?.job &&
-                    state.errors.job.map((error: string) => (
-                      <p className="mt-2 text-sm text-red-500" key={error}>
-                        {error}
-                      </p>
-                    ))}
-                </div>
+                 
               </div>
               <div className="flex-col field col text-gray-500">
                 <div className="field col">
@@ -204,19 +219,7 @@ const FormLayoutDemo = () => {
                     required
                   />
                 </div>
-                <div
-                  className="field col"
-                  id="location-error"
-                  aria-live="polite"
-                  aria-atomic="true"
-                >
-                  {state.errors?.location &&
-                    state.errors.location.map((error: string) => (
-                      <p className="mt-2 text-sm text-red-500" key={error}>
-                        {error}
-                      </p>
-                    ))}
-                </div>
+                 
               </div>
               <div className="flex-col field col text-gray-500">
                 <div className="field col">
@@ -240,19 +243,7 @@ const FormLayoutDemo = () => {
                     placeholder="Select One"
                   ></Dropdown>
                 </div>
-                <div
-                  className="field col"
-                  id="state-error"
-                  aria-live="polite"
-                  aria-atomic="true"
-                >
-                  {state.errors?.state &&
-                    state.errors.state.map((error: string) => (
-                      <p className="mt-2 text-sm text-red-500" key={error}>
-                        {error}
-                      </p>
-                    ))}
-                </div>
+                
               </div>
               <div className="flex-col field col">
                 <div className="field col">
@@ -262,22 +253,9 @@ const FormLayoutDemo = () => {
                     name="length"
                     type="text"
                     placeholder="Long term"
-                    required
                   />
                 </div>
-                <div
-                  className="field col"
-                  id="phone-error"
-                  aria-live="polite"
-                  aria-atomic="true"
-                >
-                  {state.errors?.phone &&
-                    state.errors.phone.map((error: string) => (
-                      <p className="mt-2 text-sm text-red-500" key={error}>
-                        {error}
-                      </p>
-                    ))}
-                </div>
+                 
               </div>
             </div>
 
@@ -285,21 +263,9 @@ const FormLayoutDemo = () => {
               <div className="flex-col field col">
                 <div className="field col">
                   <label htmlFor="name2">Title *</label>
-                  <InputText id="name2" name="title" type="text" required />
+                  <InputText id="name2" name="name" type="text" required />
                 </div>
-                <div
-                  className="field col"
-                  id="state-error"
-                  aria-live="polite"
-                  aria-atomic="true"
-                >
-                  {state.errors?.state &&
-                    state.errors.state.map((error: string) => (
-                      <p className="mt-2 text-sm text-red-500" key={error}>
-                        {error}
-                      </p>
-                    ))}
-                </div>
+                 
               </div>
               <div className="flex-col field col">
                 <div className="field col">
@@ -309,22 +275,9 @@ const FormLayoutDemo = () => {
                     name="restriction"
                     type="text"
                     placeholder="W2 or C2C"
-                    required
                   />
                 </div>
-                <div
-                  className="field col"
-                  id="phone-error"
-                  aria-live="polite"
-                  aria-atomic="true"
-                >
-                  {state.errors?.phone &&
-                    state.errors.phone.map((error: string) => (
-                      <p className="mt-2 text-sm text-red-500" key={error}>
-                        {error}
-                      </p>
-                    ))}
-                </div>
+                
               </div>
             </div>
 
@@ -342,19 +295,7 @@ const FormLayoutDemo = () => {
                     placeholder="Select One"
                   ></Dropdown>
                 </div>
-                <div
-                  className="field col"
-                  id="location-error"
-                  aria-live="polite"
-                  aria-atomic="true"
-                >
-                  {state.errors?.location &&
-                    state.errors.location.map((error: string) => (
-                      <p className="mt-2 text-sm text-red-500" key={error}>
-                        {error}
-                      </p>
-                    ))}
-                </div>
+              
               </div>
               <div className="flex-col field col text-gray-500">
                 <div className="field col">
@@ -399,24 +340,11 @@ const FormLayoutDemo = () => {
                     <Calendar
                       showIcon
                       showButtonBar
-                      value={calendarValue}
-                      onChange={(e) => setCalendarValue(e.value ?? null)}
+                      name="deadline"
                       required
                     />
                   </div>
-                  <div
-                    className="field col"
-                    id="rate-error"
-                    aria-live="polite"
-                    aria-atomic="true"
-                  >
-                    {state.errors?.rate &&
-                      state.errors.rate.map((error: string) => (
-                        <p className="mt-2 text-sm text-red-500" key={error}>
-                          {error}
-                        </p>
-                      ))}
-                  </div>
+                  
                 </div>
 
                 <div className="flex-col field col">
@@ -535,6 +463,7 @@ const FormLayoutDemo = () => {
                   <InputTextarea
                     placeholder="Your Message"
                     rows={5}
+                    name="description"
                     cols={30}
                   />
                 </div>
