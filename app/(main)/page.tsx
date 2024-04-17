@@ -7,14 +7,15 @@ import { InputText } from 'primereact/inputtext';
 import { ProgressBar } from 'primereact/progressbar';
 import React, { useEffect, useRef, useState,useContext } from 'react';
 import { CustomerService } from '@/demo/service/CustomerService';
-import type { Demo } from '@/types';
-import { useQuery, gql } from '@apollo/client';
+import type { Demo } from '@/types'; 
 import { Button } from 'primereact/button';
 import ReactHtmlParser from 'react-html-parser';
 import { Paginator } from 'primereact/paginator';
 import { Badge } from 'primereact/badge';
 import './index.css'
 import {AppContext} from '../providers/approvider';
+import { gql, useMutation, useQuery } from "@apollo/client";
+import Actiontemplate from './action'
 function List() {
     const [filters, setFilters] = useState<DataTableFilterMeta>({});
     const {offset,setOffset,limit,setLimit} = useContext(AppContext) 
@@ -41,7 +42,18 @@ function List() {
         }
     }
     `;
-
+    const DELETE_JOB = gql`
+    mutation DeleteJob(
+        $id:String!
+    ) {
+      createJob(
+        id: $id
+        
+      ) {
+       success
+      }
+    }
+  `;
     const formatDate = (value: Date) => {
         console.log(value)
         return value.toLocaleDateString('en-US', {
@@ -129,7 +141,7 @@ function List() {
     };
     
     const dateBodyTemplate = (job: Demo.Job) => {
-        const dateToCheck = new Date('2024-04-16');
+        const dateToCheck = new Date(job.deadline);
         const today = new Date();
          var classdate=''
         if (dateToCheck <= today) {
@@ -163,12 +175,18 @@ function List() {
             </>
         );
     };
-    const actionBodyTemplate =()=>{
+    const onSelectRow=(id:any)=>{
+        router.push(`edit/position/${id}`)
+    }
+    
+ 
+
+    const actionBodyTemplate =(job:Demo.Job)=>{
         return <> 
 
             <Button icon="pi pi-search-plus" className='mr-1'  severity="info" size="small"  />
-            <Button icon="pi pi-file-edit" className='mr-1'  severity="info" size="small" />
-            <Button icon="pi pi-times"  className='mr-1' severity="danger"  size="small" />
+            <Button icon="pi pi-file-edit"    className='mr-1'  severity="info" size="small" />
+            <Button icon="pi pi-times"    className='mr-1' severity="danger"  size="small" />
 
         </>;
     }
@@ -196,14 +214,16 @@ function List() {
                 resizableColumns 
                 filters={filters}
                 onRowClick={onRowClick}
+                scrollable={true}
+            
                 className="table-custom"
             >
-                <Column field="action" header="Action" sortable body={actionBodyTemplate} headerClassName="white-space-nowrap" style={{ width: '15%' }}></Column>
-                <Column field="name" header="Job ID-Title" sortable body={nameBodyTemplate} headerClassName="white-space-nowrap" style={{ width: '10%' }}></Column>
-                <Column field="location" header="Location" sortable body={countryBodyTemplate} headerClassName="white-space-nowrap" style={{ width: '10%' }}></Column>
+                <Column field="action" header="Action" sortable body={Actiontemplate} headerClassName="white-space-normal" style={{ width: '10%' }}></Column>
+                <Column field="name" header="Job ID-Title" sortable body={nameBodyTemplate} headerClassName="white-space-nowrap" style={{ width: '15%' }}></Column>
+                <Column field="location" header="Location" sortable body={countryBodyTemplate} headerClassName="white-space-nowrap" style={{ width: '20%' }}></Column>
                 <Column field="deadline" header="Exp.Date" sortable body={dateBodyTemplate} headerClassName="white-space-nowrap" style={{ width: '15%' }} ></Column>
-                <Column field="description" header="Notes" body={descriptionBodyTemplate} headerClassName="white-space-wrap" style={{ width: '15%' }} ></Column>
-                <Column field="resumecount" header="Resumes count"  body={resumecountBodyTemplate} headerClassName="white-space-nowrap" style={{ width: '15%' }} ></Column> 
+                <Column field="description" header="Notes" body={descriptionBodyTemplate} headerClassName="white-space-normal"  style={{ width: '30%' }} ></Column>
+                <Column field="resumecount" header="Resumes count"  body={resumecountBodyTemplate} headerClassName="white-space-nowrap" style={{ width: '10%' }} ></Column> 
             </DataTable>
             <Paginator
                 first={offset}
